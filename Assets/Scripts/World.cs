@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using Unity.Collections;
 using Unity.Entities;
 using Unity.Mathematics;
 using Unity.Rendering;
@@ -15,23 +16,37 @@ namespace Automation
         public void Convert(Entity entity, EntityManager dstManager, GameObjectConversionSystem conversionSystem)
         {
             var prefabEntity = conversionSystem.GetPrimaryEntity(BeltPrefab);
-            var s1 = CreateSegment(dstManager, prefabEntity, new BeltSegment
-            {
-                Start = new int2(13, 5),
-                End = new int2(13, 10),
-            });
-            var s2 = CreateSegment(dstManager, prefabEntity, new BeltSegment
+            var entities =dstManager.Instantiate(prefabEntity, 4, Allocator.Temp);
+            CreateSegment(dstManager, new BeltSegment
             {
                 Start = new int2(3, 5),
                 End = new int2(12, 5),
-                Next = s1,
-            }, 
+                Next = entities[1],
+            }, entities[0], 
 (EntityType.A, 1),(EntityType.B, 2));
+            CreateSegment(dstManager, new BeltSegment
+            {
+                Start = new int2(13, 5),
+                End = new int2(13, 10),
+                Next = entities[2],
+            }, entities[1]);
+            CreateSegment(dstManager, new BeltSegment
+            {
+                Start = new int2(13,11),
+                End = new int2(4,11),
+                Next = entities[3],
+            }, entities[2]);
+            CreateSegment(dstManager, new BeltSegment
+            {
+                Start = new int2(3,11),
+                End = new int2(3,6),
+                Next = entities[0],
+            }, entities[3]);
+            entities.Dispose();
         }
 
-        private static Entity CreateSegment(EntityManager dstManager, Entity prefabEntity, BeltSegment segment, params (EntityType, byte)[] beltItems)
+        private static Entity CreateSegment(EntityManager dstManager, BeltSegment segment, Entity beltSegmentEntity, params (EntityType, byte)[] beltItems)
         {
-            var beltSegmentEntity = dstManager.Instantiate(prefabEntity);
             dstManager.AddComponentData(beltSegmentEntity, segment);
             dstManager.SetComponentData(beltSegmentEntity, new Translation
             {
