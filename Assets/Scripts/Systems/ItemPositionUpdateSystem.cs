@@ -3,7 +3,7 @@ using Unity.Transforms;
 
 namespace Automation
 {
-    [UpdateAfter(typeof(BeltUpdateCommandSystem))]
+    [UpdateAfter(typeof(InsertItemsInQueuesSystem))]
     class ItemPositionUpdateSystem : SystemBase
     {
         protected override void OnUpdate()
