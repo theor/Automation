@@ -458,6 +458,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   BeltPrefab: {fileID: 5280100617728623151, guid: 3a6b25bef06125945a72c30fe2136a74, type: 3}
+  ItemPrefab: {fileID: 4136949452293811410, guid: 8e5be7d40e839374583661d143cbd641, type: 3}
 --- !u!4 &1980665292
 Transform:
   m_ObjectHideFlags: 0

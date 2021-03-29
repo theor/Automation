@@ -32,7 +32,7 @@ namespace Automation
             }).WithoutBurst().Run();
             entityCommandBuffer.Playback(EntityManager);
             
-            var prefab = GetSingletonEntity<Prefab>();
+            var prefab = GetSingleton<World.Prefabs>();
 
             var ecb = _ecbSystem.CreateCommandBuffer().AsParallelWriter();
             _ecbSystem.AddJobHandleForProducer(Dependency = Entities
@@ -50,7 +50,7 @@ namespace Automation
                         };
                         if (item.Entity == Entity.Null)
                         {
-                            var itemEntity = ecb.Instantiate(entityInQueryIndex, prefab);
+                            var itemEntity = ecb.Instantiate(entityInQueryIndex, prefab.ItemPrefab);
                             ecb.AddComponent(entityInQueryIndex, itemEntity, new SpawnedItemVisual
                             {
                                 BeltSegment = e,BeltItemIndex = i,

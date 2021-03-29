@@ -10,12 +10,23 @@ namespace Automation
 {
     class World : MonoBehaviour, IConvertGameObjectToEntity, IDeclareReferencedPrefabs
     {
+        public struct Prefabs:IComponentData
+        {
+            public Entity BeltPrefab;
+            public Entity ItemPrefab;
+        }
         public GameObject BeltPrefab;
-        // public GameObject ItemPrefab;
+        public GameObject ItemPrefab;
 
         public void Convert(Entity entity, EntityManager dstManager, GameObjectConversionSystem conversionSystem)
         {
             var prefabEntity = conversionSystem.GetPrimaryEntity(BeltPrefab);
+            var itemEntity = conversionSystem.GetPrimaryEntity(ItemPrefab);
+            dstManager.AddComponentData(entity, new Prefabs
+            {
+                BeltPrefab = prefabEntity,
+                ItemPrefab = itemEntity,
+            });
             var entities =dstManager.Instantiate(prefabEntity, 4, Allocator.Temp);
             CreateSegment(dstManager, new BeltSegment
             {
@@ -69,6 +80,7 @@ namespace Automation
         public void DeclareReferencedPrefabs(List<GameObject> referencedPrefabs)
         {
             referencedPrefabs.Add(BeltPrefab);
+            referencedPrefabs.Add(ItemPrefab);
         }
     }
 }
