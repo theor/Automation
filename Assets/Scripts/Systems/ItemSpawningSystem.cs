@@ -53,7 +53,7 @@ namespace Automation
                         // Debug.Log(String.Format("Compute dist {0} at {1}", dist, beltItemVisual.AccumulatedDistance));
                         if (item.Entity == Entity.Null)
                         {
-                            var itemEntity = ecb.Instantiate(entityInQueryIndex, prefab.ItemPrefab);
+                            var itemEntity = ecb.Instantiate(entityInQueryIndex, item.Type == EntityType.A ? prefab.ItemPrefab : prefab.Item2Prefab);
                             ecb.AddComponent(entityInQueryIndex, itemEntity, new SpawnedItemVisual
                             {
                                 BeltSegment = e,BeltItemIndex = i,

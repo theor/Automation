@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 using Unity.Collections;
 using Unity.Entities;
 using Unity.Mathematics;
@@ -13,27 +14,33 @@ namespace Automation
         {
             public Entity BeltPrefab;
             public Entity ItemPrefab;
+            public Entity Item2Prefab;
         }
         public GameObject BeltPrefab;
         public GameObject ItemPrefab;
+        public GameObject Item2Prefab;
 
         public void Convert(Entity entity, EntityManager dstManager, GameObjectConversionSystem conversionSystem)
         {
             var prefabEntity = conversionSystem.GetPrimaryEntity(BeltPrefab);
             var itemEntity = conversionSystem.GetPrimaryEntity(ItemPrefab);
+            var item2Entity = conversionSystem.GetPrimaryEntity(Item2Prefab);
             dstManager.AddComponentData(entity, new Prefabs
             {
                 BeltPrefab = prefabEntity,
                 ItemPrefab = itemEntity,
+                Item2Prefab = item2Entity,
             });
-            var entities =dstManager.Instantiate(prefabEntity, 4, Allocator.Temp);
+            var entities =dstManager.Instantiate(prefabEntity, 3, Allocator.Temp);
             CreateSegment(dstManager, new BeltSegment
             {
-                Start = new int2(3, 5),
+                Start = new int2(-300, 5),
                 End = new int2(12, 5),
                 Next = entities[1],
-            }, entities[0], 
-(EntityType.A, 1),(EntityType.B, 2));
+            }, entities[0],
+                Enumerable.Range(0, 300).Select(x => (x%2 == 0 ? EntityType.A : EntityType.B, (ushort)1)).ToArray()
+// (EntityType.A, 1),(EntityType.B, 1)
+);
             CreateSegment(dstManager, new BeltSegment
             {
                 Start = new int2(13, 5),
@@ -55,7 +62,7 @@ namespace Automation
             entities.Dispose();
         }
 
-        private static Entity CreateSegment(EntityManager dstManager, BeltSegment segment, Entity beltSegmentEntity, params (EntityType, byte)[] beltItems)
+        private static Entity CreateSegment(EntityManager dstManager, BeltSegment segment, Entity beltSegmentEntity, params (EntityType, ushort)[] beltItems)
         {
             dstManager.AddComponentData(beltSegmentEntity, segment);
             var length = math.max(math.abs(segment.End.x - segment.Start.x), math.abs(segment.End.y - segment.Start.y));
@@ -90,6 +97,7 @@ namespace Automation
         {
             referencedPrefabs.Add(BeltPrefab);
             referencedPrefabs.Add(ItemPrefab);
+            referencedPrefabs.Add(Item2Prefab);
         }
     }
 }

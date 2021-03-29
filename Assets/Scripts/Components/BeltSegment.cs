@@ -57,7 +57,7 @@ namespace Automation
         }
         public readonly float3 ComputePosition(float dist)
         {
-            return new float3(DropPoint.x + (dist) * RevDir.x, 1, DropPoint.y + (dist) * RevDir.y);
+            return new float3(DropPoint.x + (dist) * RevDir.x, 0, DropPoint.y + (dist) * RevDir.y);
         }
     }
 }

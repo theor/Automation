@@ -10,7 +10,7 @@ namespace Automation
     {
         private float _acc;
         private BeltUpdateCommandSystem _ecbSystem;
-        public const ushort BeltDistanceSubDiv = 16;
+        public const ushort BeltDistanceSubDiv = 8;
 
         protected override void OnCreate()
         {

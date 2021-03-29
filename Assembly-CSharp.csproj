@@ -52,6 +52,8 @@
     <ImplicitlyExpandDesignTimeFacades>false</ImplicitlyExpandDesignTimeFacades>
   </PropertyGroup>
   <ItemGroup>
+     <Compile Include="Assets\Scripts\Components\InsertInQueue.cs" />
+     <Compile Include="Assets\Scripts\Components\BeltItem.cs" />
      <Compile Include="Assets\Scripts\Systems\BeltUpdateSystem.cs" />
      <Compile Include="Assets\Scripts\SimpleCameraController.cs" />
      <Compile Include="Assets\Scripts\Systems\ItemSpawningSystem.cs" />
@@ -59,13 +61,11 @@
      <Compile Include="Assets\Scripts\Systems\ItemSpawningCommandSystem.cs" />
      <Compile Include="Assets\Scripts\Systems\ItemPositionUpdateSystem.cs" />
      <Compile Include="Assets\TutorialInfo\Scripts\Readme.cs" />
-     <Compile Include="Assets\Scripts\Components\BeltSegment.cs" />
      <Compile Include="Assets\Scripts\Components\EntityType.cs" />
-     <Compile Include="Assets\Scripts\Components\BeltItemVisual.cs" />
-     <Compile Include="Assets\Scripts\Components\BeltItem.cs" />
-     <Compile Include="Assets\Scripts\Components\InsertInQueue.cs" />
-     <Compile Include="Assets\Scripts\PointExt.cs" />
+     <Compile Include="Assets\Scripts\Components\BeltSegment.cs" />
      <Compile Include="Assets\Scripts\Components\ShaderRotation.cs" />
+     <Compile Include="Assets\Scripts\PointExt.cs" />
+     <Compile Include="Assets\Scripts\Components\BeltItemVisual.cs" />
  <Reference Include="UnityEngine">
  <HintPath>C:/Program Files/Unity/Hub/Editor/2020.2.1f1/Editor/Data/Managed/UnityEngine/UnityEngine.dll</HintPath>
  </Reference>
