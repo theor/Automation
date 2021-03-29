@@ -100,7 +100,7 @@ namespace Automation
             var prefab = GetSingletonEntity<Prefab>();
 
             var ecb = _ecbSystem.CreateCommandBuffer().AsParallelWriter();
-            _ecbSystem.AddJobHandleForProducer(Entities
+            _ecbSystem.AddJobHandleForProducer(Dependency = Entities
                 .ForEach((Entity e, int entityInQueryIndex, DynamicBuffer<BeltItem> items, in BeltSegment segment) =>
                 {
                     float dist = 0;
@@ -139,20 +139,44 @@ namespace Automation
     [UpdateAfter(typeof(ItemSpawningCommandSystem))]
     class BeltUpdateSystem : SystemBase
     {
+        private float _acc;
+
         protected override void OnUpdate()
         {
-            Entities.ForEach((Entity e, DynamicBuffer<BeltItem> items, in BeltSegment s) =>
+            _acc += Time.DeltaTime;
+            if (_acc > .5f)
             {
-                for (int i = 0; i < items.Length; i++)
+                _acc = 0;
+                 Dependency = Entities.ForEach((Entity e, DynamicBuffer<BeltItem> items, in BeltSegment segment) =>
                 {
-                    ref var item = ref items.ElementAt(i);
-                    if (item.Distance > 0)
+                    for (int i = 0; i < items.Length; i++)
                     {
-                        item.Distance--;
-                        break;
+                        ref var item = ref items.ElementAt(i);
+                        if (item.Distance > 0)
+                        {
+                            item.Distance--;
+                            break;
+                        }
+
+                        // if (segment.Next != Entity.Null)
+                        // {
+                        //     int2 dropPoint = segment.DropPoint;
+                        //     var worldSegment = _world.Segments[segment.Next];
+                        //     worldSegment.InsertItem(segmentItem, dropPoint);//, segment.Next > index);
+                        //     _world.Segments[segment.Next] = worldSegment;
+                        //     segment.Items.RemoveAt(itemIdx);
+                        //     if (itemIdx < segment.Items.Count)
+                        //     {
+                        //         var nextItem = segment.Items[itemIdx];
+                        //         nextItem.Distance++;
+                        //         segment.Items[itemIdx] = nextItem;
+                        //     }
+                        //
+                        //     // itemIdx--;
+                        // }
                     }
-                }
-            }).Run();
+                }).ScheduleParallel(Dependency);
+            }
         }
     }
 
