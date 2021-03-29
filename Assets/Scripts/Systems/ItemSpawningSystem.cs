@@ -1,5 +1,7 @@
+using System;
 using Unity.Collections;
 using Unity.Entities;
+using UnityEngine;
 
 namespace Automation
 {
@@ -42,12 +44,13 @@ namespace Automation
                     for (int i = 0; i < items.Length; i++)
                     {
                         ref var item = ref items.ElementAt(i);
-                        dist += (item.Distance /(float)BeltUpdateSystem.BeltDistanceSubDiv)+ 1;
+                        dist += (item.Distance /(float)BeltUpdateSystem.BeltDistanceSubDiv);
                         var beltItemVisual = new BeltItemVisual
                         {
                             Type = item.Type,
                             AccumulatedDistance = segment.ComputePosition(dist)
                         };
+                        Debug.Log(String.Format("Compute dist {0} at {1}", dist, beltItemVisual.AccumulatedDistance));
                         if (item.Entity == Entity.Null)
                         {
                             var itemEntity = ecb.Instantiate(entityInQueryIndex, prefab.ItemPrefab);
@@ -60,6 +63,7 @@ namespace Automation
                         }
                         else
                             ecb.SetComponent(entityInQueryIndex, item.Entity, beltItemVisual);
+
                     }
                 })
                 .ScheduleParallel(Dependency));

@@ -36,8 +36,9 @@ namespace Automation
                         {
                             item.Distance--;
                             // Debug.Log("Move");
-                            break;
                         }
+                        if(item.Distance > 0)
+                            break;
 
                         if (segment.Next != Entity.Null)
                         {

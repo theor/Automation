@@ -22,9 +22,7 @@ namespace Automation
         public void InsertItem(ref DynamicBuffer<BeltItem> items, BeltItem segmentItem, int2 dropPoint)
         {
             segmentItem.Distance = 0;
-            var p = End;
-            var d = RevDir;
-            var targetDist = math.abs(dropPoint.x - End.x + dropPoint.y - End.y) * BeltUpdateSystem.BeltDistanceSubDiv;
+            var targetDist = math.abs(dropPoint.x - DropPoint.x + dropPoint.y - DropPoint.y) * BeltUpdateSystem.BeltDistanceSubDiv;
             int itemIdx = 0;
             int iter = 100;
             var dist = 0;
@@ -38,7 +36,7 @@ namespace Automation
                 {
                     if (items[itemIdx].Distance == segmentItem.Distance)
                     {
-                        segmentItem.Distance = 0;
+                        segmentItem.Distance = 1;
                         itemIdx++;
                         continue;
                     }
