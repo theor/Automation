@@ -15,6 +15,18 @@ namespace Automation
         public EntityType Type;
         public float3 AccumulatedDistance;
     }
+
+    struct InsertInQueue : IBufferElementData
+    {
+        public readonly BeltItem Item;
+        public readonly int2 DropPoint;
+
+        public InsertInQueue(BeltItem item, int2 dropPoint)
+        {
+            Item = item;
+            DropPoint = dropPoint;
+        }
+    }
     struct BeltItem : IBufferElementData
     {
         public EntityType Type;
@@ -45,39 +57,38 @@ namespace Automation
 
         // public List<BeltItem> Items;
 
-        // public void InsertItem(BeltItem segmentItem, int2 dropPoint, bool itemWillBeTickedAgain)
-        // {
-        //     segmentItem.Distance = 0;
-        //     var p = End;
-        //     var d = RevDir;
-        //     int itemIdx = 0;
-        //     while (!p.Equals(dropPoint))
-        //     {
-        //         p += d;
-        //         Items ??= new List<BeltItem>();
-        //         if (itemIdx < Items.Count)
-        //         {
-        //             if (Items[itemIdx].Distance == segmentItem.Distance)
-        //             {
-        //                 segmentItem.Distance = 0;
-        //                 itemIdx++;
-        //                 continue;
-        //             }
-        //         }
-        //         segmentItem.Distance++;
-        //     }
-        //
-        //     if (itemWillBeTickedAgain)
-        //         segmentItem.Distance++;
-        //     // if not last item, patch next one
-        //     if (itemIdx < Items.Count)
-        //     {
-        //         var i = Items[itemIdx];
-        //         i.Distance = (byte) (i.Distance - segmentItem.Distance - 1);
-        //         Items[itemIdx] = i;
-        //     }
-        //     Items.Insert(itemIdx, segmentItem);
-        // }
+        public void InsertItem(ref DynamicBuffer<BeltItem> items, BeltItem segmentItem, int2 dropPoint)//, bool itemWillBeTickedAgain)
+        {
+            segmentItem.Distance = 0;
+            var p = End;
+            var d = RevDir;
+            int itemIdx = 0;
+            while (!p.Equals(dropPoint))
+            {
+                p += d;
+                if (itemIdx < items.Length)
+                {
+                    if (items[itemIdx].Distance == segmentItem.Distance)
+                    {
+                        segmentItem.Distance = 0;
+                        itemIdx++;
+                        continue;
+                    }
+                }
+                segmentItem.Distance++;
+            }
+        
+            // if (itemWillBeTickedAgain)
+            //     segmentItem.Distance++;
+            // if not last item, patch next one
+            // if (itemIdx < Items.Count)
+            // {
+            //     var i = Items[itemIdx];
+            //     i.Distance = (byte) (i.Distance - segmentItem.Distance - 1);
+            //     Items[itemIdx] = i;
+            // }
+            items.Insert(itemIdx, segmentItem);
+        }
         public readonly float3 ComputePosition(float dist)
         {
             return new float3(DropPoint.x + dist * RevDir.x, 1, DropPoint.y + dist * RevDir.y);

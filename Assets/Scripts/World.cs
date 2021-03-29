@@ -15,18 +15,18 @@ namespace Automation
         public void Convert(Entity entity, EntityManager dstManager, GameObjectConversionSystem conversionSystem)
         {
             var prefabEntity = conversionSystem.GetPrimaryEntity(BeltPrefab);
+            var s1 = CreateSegment(dstManager, prefabEntity, new BeltSegment
+            {
+                Start = new int2(13, 5),
+                End = new int2(13, 10),
+            });
             var s2 = CreateSegment(dstManager, prefabEntity, new BeltSegment
             {
                 Start = new int2(3, 5),
                 End = new int2(12, 5),
+                Next = s1,
             }, 
 (EntityType.A, 1),(EntityType.B, 2));
-            CreateSegment(dstManager, prefabEntity, new BeltSegment
-            {
-                Start = new int2(13, 5),
-                End = new int2(13, 10),
-                Next = s2,
-            });
         }
 
         private static Entity CreateSegment(EntityManager dstManager, Entity prefabEntity, BeltSegment segment, params (EntityType, byte)[] beltItems)
@@ -45,6 +45,7 @@ namespace Automation
             // RenderMeshUtility.AddComponents(beltSegmentEntity, dstManager, new RenderMeshDescription(Prefab.GetComponent<Renderer>(), Prefab.GetComponent<MeshFilter>().sharedMesh));
             var size = new float3(segment.End.x - segment.Start.x + 1, 1, segment.End.y - segment.Start.y + 1);
             dstManager.AddComponentData(beltSegmentEntity, new NonUniformScale {Value = size});
+            dstManager.AddBuffer<InsertInQueue>(beltSegmentEntity);
             return beltSegmentEntity;
         }
 
