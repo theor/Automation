@@ -2,3 +2,4 @@
 obj/
 *.log
 Assets/SceneDependencyCache/
+Temp/

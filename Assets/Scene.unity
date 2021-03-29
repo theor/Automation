@@ -362,7 +362,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9dc9ffa157a14459acdbc2f0acc3d6e8, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  Prefab: {fileID: 5280100617728623151, guid: 3a6b25bef06125945a72c30fe2136a74, type: 3}
+  BeltPrefab: {fileID: 5280100617728623151, guid: 3a6b25bef06125945a72c30fe2136a74, type: 3}
 --- !u!4 &1980665292
 Transform:
   m_ObjectHideFlags: 0

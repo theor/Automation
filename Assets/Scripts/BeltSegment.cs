@@ -7,7 +7,7 @@ namespace Automation
 {
     static class PointExt
     {
-        public static int2 Dir(int2 a, int2 b) => new int2(b.x - a.x > 0 ? 1 : -1, b.y - a.y > 0 ? 1 : -1);
+        public static int2 Dir(int2 a, int2 b) => new int2( (int) math.sign(b.x - a.x), (int) math.sign(b.y - a.y));
     }
 
     struct BeltItemVisual : IComponentData
@@ -36,10 +36,10 @@ namespace Automation
         public int2 Start;
         public int2 End;
         public Entity Next;
-        [JsonIgnore] public int2 Dir => PointExt.Dir(Start, End);
-        [JsonIgnore] public int2 RevDir => PointExt.Dir(End, Start);
+        [JsonIgnore] public readonly int2 Dir => PointExt.Dir(Start, End);
+        [JsonIgnore] public readonly int2 RevDir => PointExt.Dir(End, Start);
 
-        [JsonIgnore] public int2 DropPoint => End + Dir;
+        [JsonIgnore] public readonly int2 DropPoint => End + Dir;
 
         public override string ToString() => $"Segment {Start} -> {End}";
 
@@ -78,9 +78,9 @@ namespace Automation
         //     }
         //     Items.Insert(itemIdx, segmentItem);
         // }
-        public float3 ComputePosition(float dist)
+        public readonly float3 ComputePosition(float dist)
         {
-            return new float3(End.x + dist * RevDir.x, 0, End.y + dist * RevDir.y);
+            return new float3(DropPoint.x + dist * RevDir.x, 1, DropPoint.y + dist * RevDir.y);
         }
     }
 

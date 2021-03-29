@@ -8,9 +8,14 @@ using UnityEngine;
 
 namespace Automation
 {
+    // class PrefabTag : MonoBehaviour, IConvertGameObjectToEntity
+    // {
+    //     
+    // }
     class World : MonoBehaviour, IConvertGameObjectToEntity, IDeclareReferencedPrefabs
     {
-        public GameObject Prefab;
+        public GameObject BeltPrefab;
+        // public GameObject ItemPrefab;
 
         public void Convert(Entity entity, EntityManager dstManager, GameObjectConversionSystem conversionSystem)
             // void Start()
@@ -21,7 +26,7 @@ namespace Automation
             var prefabEntity =
                 // dstManager.crea
                 // GameObjectConversionUtility.pre) //
-                conversionSystem.GetPrimaryEntity(Prefab);
+                conversionSystem.GetPrimaryEntity(BeltPrefab);
             // w.GetExistingSystem<GameObjectConversionSystem>().GetPrimaryEntity(Prefab);
             // Debug.Log(prefabEntity);
             var beltSegmentEntity = //conversionSystem.CreateAdditionalEntity(this);
@@ -32,6 +37,8 @@ namespace Automation
                 End = new int2(12, 5),
             };
             dstManager.AddComponentData(beltSegmentEntity, segment);
+            dstManager.SetComponentData(beltSegmentEntity, new Translation{Value=new float3(
+                (segment.Start.x + segment.End.x)/2f, 0, (segment.Start.y+segment.End.y)/2f)});
             var items = dstManager.AddBuffer<BeltItem>(beltSegmentEntity);
             items.Add(new BeltItem(EntityType.A, 1));
             items.Add(new BeltItem(EntityType.B, 2));
@@ -44,7 +51,8 @@ namespace Automation
 
         public void DeclareReferencedPrefabs(List<GameObject> referencedPrefabs)
         {
-            referencedPrefabs.Add(Prefab);
+            referencedPrefabs.Add(BeltPrefab);
+            // referencedPrefabs.Add(ItemPrefab);
         }
     }
 
@@ -69,36 +77,54 @@ namespace Automation
             _ecbSystem = World.GetExistingSystem<ItemSpawningCommandSystem>();
         }
 
+        public struct SpawnedItemVisual : IComponentData
+        {
+            public Entity BeltSegment;
+            public int BeltItemIndex;
+        }
+        
         protected override void OnUpdate()
         {
+            var entityCommandBuffer = new EntityCommandBuffer(Allocator.Temp, PlaybackPolicy.MultiPlayback);
+            
+
+            Entities.ForEach((Entity e, in SpawnedItemVisual v) =>
+            {
+                
+                var b = EntityManager.GetBuffer<BeltItem>(v.BeltSegment);
+                b.ElementAt(v.BeltItemIndex).Entity = e;
+                entityCommandBuffer.RemoveComponent<SpawnedItemVisual>(e);
+            }).WithoutBurst().Run();
+            entityCommandBuffer.Playback(EntityManager);
+            
             var prefab = GetSingletonEntity<Prefab>();
 
             var ecb = _ecbSystem.CreateCommandBuffer().AsParallelWriter();
             _ecbSystem.AddJobHandleForProducer(Entities
-                .ForEach((Entity e, int entityInQueryIndex, BeltSegment segment, DynamicBuffer<BeltItem> items) =>
+                .ForEach((Entity e, int entityInQueryIndex, DynamicBuffer<BeltItem> items, in BeltSegment segment) =>
                 {
                     float dist = 0;
                     for (int i = 0; i < items.Length; i++)
                     {
                         ref var item = ref items.ElementAt(i);
-                        dist += item.Distance;
+                        dist += item.Distance + 1;
+                        var beltItemVisual = new BeltItemVisual
+                        {
+                            Type = item.Type,
+                            AccumulatedDistance = segment.ComputePosition(dist)
+                        };
                         if (item.Entity == Entity.Null)
                         {
                             var itemEntity = ecb.Instantiate(entityInQueryIndex, prefab);
-
-                            item.Entity = itemEntity;
-                            ecb.AddComponent(entityInQueryIndex, itemEntity, new BeltItemVisual
+                            ecb.AddComponent(entityInQueryIndex, itemEntity, new SpawnedItemVisual
                             {
-                                Type = item.Type,
-                                AccumulatedDistance = segment.ComputePosition(dist)
+                                BeltSegment = e,BeltItemIndex = i,
                             });
+
+                            ecb.AddComponent(entityInQueryIndex, itemEntity, beltItemVisual);
                         }
                         else
-                            ecb.SetComponent(entityInQueryIndex, item.Entity, new BeltItemVisual
-                            {
-                                Type = item.Type,
-                                AccumulatedDistance = segment.ComputePosition(dist)
-                            });
+                            ecb.SetComponent(entityInQueryIndex, item.Entity, beltItemVisual);
                     }
                 })
                 .ScheduleParallel(Dependency));
@@ -110,27 +136,35 @@ namespace Automation
     {
     }
 
-    [UpdateAfter(typeof(BeltUpdateSystem))]
-    class ItemPositionUpdateSystem : SystemBase
-    {
-        protected override void OnUpdate()
-        {
-            Entities.ForEach((Entity e, BeltItemVisual itemVisual, ref Translation ltw) =>
-            {
-                ltw.Value = itemVisual.AccumulatedDistance;
-            }).ScheduleParallel();
-        }
-    }
-
     [UpdateAfter(typeof(ItemSpawningCommandSystem))]
     class BeltUpdateSystem : SystemBase
     {
         protected override void OnUpdate()
         {
-            Entities.ForEach((Entity e, BeltSegment s, DynamicBuffer<BeltItem> items) =>
+            Entities.ForEach((Entity e, DynamicBuffer<BeltItem> items, in BeltSegment s) =>
             {
-                Debug.Log($"{e} {s.Start} -> {s.End} {items.Length}");
+                for (int i = 0; i < items.Length; i++)
+                {
+                    ref var item = ref items.ElementAt(i);
+                    if (item.Distance > 0)
+                    {
+                        item.Distance--;
+                        break;
+                    }
+                }
             }).Run();
+        }
+    }
+
+    [UpdateAfter(typeof(BeltUpdateSystem))]
+    class ItemPositionUpdateSystem : SystemBase
+    {
+        protected override void OnUpdate()
+        {
+            Entities.ForEach((Entity e, ref Translation ltw, in BeltItemVisual itemVisual) =>
+            {
+                ltw.Value = itemVisual.AccumulatedDistance;
+            }).ScheduleParallel();
         }
     }
 }
