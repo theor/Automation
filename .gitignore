@@ -1,0 +1,4 @@
+﻿Library/
+obj/
+*.log
+Assets/SceneDependencyCache/

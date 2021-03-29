@@ -1,0 +1,59 @@
+{
+  "Entities": [
+    {
+      "Id": 0,
+      "Type": "none"
+    },
+    {
+      "Id": 1,
+      "Type": "a"
+    },
+    {
+      "Id": 2,
+      "Type": "b"
+    },
+    {
+      "Id": 3,
+      "Type": "c"
+    }
+  ],
+  "Segments": [
+    {
+      "Start": {
+        "X": 3,
+        "Y": 5
+      },
+      "End": {
+        "X": 12,
+        "Y": 5
+      },
+      "Next": 2,
+      "Items": [
+        {
+          "ItemID": 1,
+          "Distance": 0
+        },
+        {
+          "ItemID": 2,
+          "Distance": 3
+        }
+      ]
+    },
+    {
+      "Start": {
+        "X": 13,
+        "Y": 2
+      },
+      "End": {
+        "X": 13,
+        "Y": 10
+      },
+      "Items": [
+        {
+          "ItemID": 3,
+          "Distance": 7
+        }
+      ]
+    }
+  ]
+}
