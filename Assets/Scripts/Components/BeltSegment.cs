@@ -2,54 +2,9 @@ using System.Collections.Generic;
 using Newtonsoft.Json;
 using Unity.Entities;
 using Unity.Mathematics;
-using Unity.Rendering;
 
 namespace Automation
 {
-    static class PointExt
-    {
-        public static int2 Dir(int2 a, int2 b) => new int2( (int) math.sign(b.x - a.x), (int) math.sign(b.y - a.y));
-    }
-
-    struct BeltItemVisual : IComponentData
-    {
-        public EntityType Type;
-        public float3 AccumulatedDistance;
-    }
-
-    struct InsertInQueue : IBufferElementData
-    {
-        public readonly BeltItem Item;
-        public readonly int2 DropPoint;
-
-        public InsertInQueue(BeltItem item, int2 dropPoint)
-        {
-            Item = item;
-            DropPoint = dropPoint;
-        }
-    }
-    struct BeltItem : IBufferElementData
-    {
-        public EntityType Type;
-        public byte Distance;
-        public Entity Entity;
-        public byte AccumulatedDistance;
-
-        public BeltItem(EntityType type, byte distance)
-        {
-            Type = type;
-            Distance = distance;
-            Entity = Entity.Null;
-            AccumulatedDistance = default;
-        }
-    }
-    
-    [MaterialProperty("_Rotation", MaterialPropertyFormat.Float)]
-    public struct ShaderRotation : IComponentData
-    {
-        public float Value;
-    }
-
     struct BeltSegment : IComponentData
     {
         public int2 Start;
@@ -62,9 +17,7 @@ namespace Automation
 
         public override string ToString() => $"Segment {Start} -> {End}";
 
-        // public List<BeltItem> Items;
-
-        public void InsertItem(ref DynamicBuffer<BeltItem> items, BeltItem segmentItem, int2 dropPoint)//, bool itemWillBeTickedAgain)
+        public void InsertItem(ref DynamicBuffer<BeltItem> items, BeltItem segmentItem, int2 dropPoint)
         {
             segmentItem.Distance = 0;
             var p = End;
@@ -100,14 +53,5 @@ namespace Automation
         {
             return new float3(DropPoint.x + dist * RevDir.x, 1, DropPoint.y + dist * RevDir.y);
         }
-    }
-
-    public enum EntityType : byte
-    {
-        None,
-        A,
-        B,
-        C,
-        Spawner
     }
 }
