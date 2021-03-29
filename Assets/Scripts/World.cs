@@ -48,17 +48,19 @@ namespace Automation
         private static Entity CreateSegment(EntityManager dstManager, BeltSegment segment, Entity beltSegmentEntity, params (EntityType, byte)[] beltItems)
         {
             dstManager.AddComponentData(beltSegmentEntity, segment);
+            var dx = math.abs(segment.End.x - segment.Start.x);
+            var dz = math.abs(segment.End.y - segment.Start.y);
             dstManager.SetComponentData(beltSegmentEntity, new Translation
             {
                 Value = new float3(
-                    (segment.Start.x + segment.End.x) / 2f, 0, (segment.Start.y + segment.End.y) / 2f)
+                    (segment.End.x + segment.Start.x) / 2f, 0, (segment.End.y + segment.Start.y) / 2f)
             });
             var items = dstManager.AddBuffer<BeltItem>(beltSegmentEntity);
             foreach (var beltItem in beltItems) items.Add(new BeltItem(beltItem.Item1, beltItem.Item2));
             dstManager.SetName(beltSegmentEntity, segment.ToString());
 
             // RenderMeshUtility.AddComponents(beltSegmentEntity, dstManager, new RenderMeshDescription(Prefab.GetComponent<Renderer>(), Prefab.GetComponent<MeshFilter>().sharedMesh));
-            var size = new float3(segment.End.x - segment.Start.x + 1, 1, segment.End.y - segment.Start.y + 1);
+            var size = new float3(dx+1, 1, dz + 1);
             dstManager.AddComponentData(beltSegmentEntity, new NonUniformScale {Value = size});
             dstManager.AddBuffer<InsertInQueue>(beltSegmentEntity);
             return beltSegmentEntity;
