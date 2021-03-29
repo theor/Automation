@@ -44,14 +44,14 @@ namespace Automation
             {
                 Start = new int2(13,11),
                 End = new int2(4,11),
-                Next = entities[3],
+                // Next = entities[3],
             }, entities[2]);
-            CreateSegment(dstManager, new BeltSegment
-            {
-                Start = new int2(3,11),
-                End = new int2(3,6),
-                Next = entities[0],
-            }, entities[3]);
+            // CreateSegment(dstManager, new BeltSegment
+            // {
+            //     Start = new int2(3,11),
+            //     End = new int2(3,6),
+            //     Next = entities[0],
+            // }, entities[3]);
             entities.Dispose();
         }
 
@@ -63,11 +63,11 @@ namespace Automation
             dstManager.SetComponentData(beltSegmentEntity, new Translation
             {
                 Value = new float3(
-                    (segment.End.x + segment.Start.x) / 2f, .95f, (segment.End.y + segment.Start.y) / 2f)
+                    (segment.End.x + segment.Start.x) / 2f, -.05f, (segment.End.y + segment.Start.y) / 2f)
             });
             var items = dstManager.AddBuffer<BeltItem>(beltSegmentEntity);
             foreach (var beltItem in beltItems)
-                items.Add(new BeltItem(beltItem.Item1, (byte) (beltItem.Item2*BeltUpdateSystem.BeltDistanceSubDiv)));
+                items.Add(new BeltItem(beltItem.Item1, (ushort) (beltItem.Item2*BeltUpdateSystem.BeltDistanceSubDiv)));
             dstManager.SetName(beltSegmentEntity, segment.ToString());
 
             // RenderMeshUtility.AddComponents(beltSegmentEntity, dstManager, new RenderMeshDescription(Prefab.GetComponent<Renderer>(), Prefab.GetComponent<MeshFilter>().sharedMesh));

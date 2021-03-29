@@ -50,7 +50,7 @@ namespace Automation
                             Type = item.Type,
                             AccumulatedDistance = segment.ComputePosition(dist)
                         };
-                        Debug.Log(String.Format("Compute dist {0} at {1}", dist, beltItemVisual.AccumulatedDistance));
+                        // Debug.Log(String.Format("Compute dist {0} at {1}", dist, beltItemVisual.AccumulatedDistance));
                         if (item.Entity == Entity.Null)
                         {
                             var itemEntity = ecb.Instantiate(entityInQueryIndex, prefab.ItemPrefab);

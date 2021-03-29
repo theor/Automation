@@ -24,9 +24,9 @@ namespace Automation
             segmentItem.Distance = 0;
             var targetDist = math.abs(dropPoint.x - DropPoint.x + dropPoint.y - DropPoint.y) * BeltUpdateSystem.BeltDistanceSubDiv;
             int itemIdx = 0;
-            int iter = 100;
+            int iter = 1000;
             var dist = 0;
-            Debug.Log($"Insert start in {Start} -> {End} target {dropPoint} dir {Dir} revdir {RevDir} targetDist {targetDist}");
+            // Debug.Log($"Insert start in {Start} -> {End} target {dropPoint} dir {Dir} revdir {RevDir} targetDist {targetDist}");
             while (dist != targetDist)
             {
                 if(iter-- <= 0)

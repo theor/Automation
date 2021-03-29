@@ -5,16 +5,14 @@ namespace Automation
     struct BeltItem : IBufferElementData
     {
         public EntityType Type;
-        public byte Distance;
+        public ushort Distance;
         public Entity Entity;
-        public byte AccumulatedDistance;
 
-        public BeltItem(EntityType type, byte distance)
+        public BeltItem(EntityType type, ushort distance)
         {
             Type = type;
             Distance = distance;
             Entity = Entity.Null;
-            AccumulatedDistance = default;
         }
     }
 }
