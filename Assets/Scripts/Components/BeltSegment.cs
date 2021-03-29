@@ -1,7 +1,9 @@
+using System;
 using System.Collections.Generic;
 using Newtonsoft.Json;
 using Unity.Entities;
 using Unity.Mathematics;
+using UnityEngine;
 
 namespace Automation
 {
@@ -20,13 +22,18 @@ namespace Automation
         public void InsertItem(ref DynamicBuffer<BeltItem> items, BeltItem segmentItem, int2 dropPoint)
         {
             segmentItem.Distance = 0;
-            segmentItem.SubDistance = 0;
             var p = End;
             var d = RevDir;
+            var targetDist = (dropPoint.x - Start.x + dropPoint.y - Start.y) * BeltUpdateSystem.BeltDistanceSubDiv;
             int itemIdx = 0;
-            while (!p.Equals(dropPoint))
+            int iter = 100;
+            var dist = 0;
+            Debug.Log($"Insert start in {Start} -> {End} target {dropPoint} dir {Dir} revdir {RevDir} targetDist {targetDist}");
+            while (dist != targetDist)
             {
-                p += d;
+                if(iter-- <= 0)
+                    throw new NotImplementedException();
+                dist++;
                 if (itemIdx < items.Length)
                 {
                     if (items[itemIdx].Distance == segmentItem.Distance)

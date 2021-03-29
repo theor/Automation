@@ -39,13 +39,10 @@ namespace Automation
                 .ForEach((Entity e, int entityInQueryIndex, DynamicBuffer<BeltItem> items, in BeltSegment segment) =>
                 {
                     float dist = 0;
-                    float distFrac = 0;
                     for (int i = 0; i < items.Length; i++)
                     {
                         ref var item = ref items.ElementAt(i);
-                        var frac = item.SubDistance/(float)BeltUpdateSystem.BeltDistanceSubDiv;
-                        distFrac += frac;
-                        dist += item.Distance + 1 - frac;
+                        dist += (item.Distance /(float)BeltUpdateSystem.BeltDistanceSubDiv)+ 1;
                         var beltItemVisual = new BeltItemVisual
                         {
                             Type = item.Type,
