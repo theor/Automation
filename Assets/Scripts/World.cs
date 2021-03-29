@@ -59,19 +59,28 @@ namespace Automation
         private static Entity CreateSegment(EntityManager dstManager, BeltSegment segment, Entity beltSegmentEntity, params (EntityType, byte)[] beltItems)
         {
             dstManager.AddComponentData(beltSegmentEntity, segment);
-            var dx = math.abs(segment.End.x - segment.Start.x);
-            var dz = math.abs(segment.End.y - segment.Start.y);
+            var length = math.max(math.abs(segment.End.x - segment.Start.x), math.abs(segment.End.y - segment.Start.y));
+            var dir = segment.Dir;
             dstManager.SetComponentData(beltSegmentEntity, new Translation
             {
                 Value = new float3(
-                    (segment.End.x + segment.Start.x) / 2f, 0, (segment.End.y + segment.Start.y) / 2f)
+                    (segment.End.x + segment.Start.x) / 2f, .95f, (segment.End.y + segment.Start.y) / 2f)
             });
             var items = dstManager.AddBuffer<BeltItem>(beltSegmentEntity);
             foreach (var beltItem in beltItems) items.Add(new BeltItem(beltItem.Item1, beltItem.Item2));
             dstManager.SetName(beltSegmentEntity, segment.ToString());
 
             // RenderMeshUtility.AddComponents(beltSegmentEntity, dstManager, new RenderMeshDescription(Prefab.GetComponent<Renderer>(), Prefab.GetComponent<MeshFilter>().sharedMesh));
-            var size = new float3(dx+1, 1, dz + 1);
+            var size = new float3(length+1, .1f, 1);
+            var yRot = (dir.x, dir.y) switch
+            {
+                (1, 0) => 0,
+                (-1,0) => 2,
+                (0,1) => 1,
+                (0,-1) => -1,
+            };
+            dstManager.AddComponentData(beltSegmentEntity, new RotationEulerXYZ {Value = new float3(0, yRot * math.PI/2f, 0)});
+            dstManager.AddComponentData(beltSegmentEntity, new ShaderRotation() {Value = yRot});
             dstManager.AddComponentData(beltSegmentEntity, new NonUniformScale {Value = size});
             dstManager.AddBuffer<InsertInQueue>(beltSegmentEntity);
             return beltSegmentEntity;

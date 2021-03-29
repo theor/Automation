@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using Newtonsoft.Json;
 using Unity.Entities;
 using Unity.Mathematics;
+using Unity.Rendering;
 
 namespace Automation
 {
@@ -41,6 +42,12 @@ namespace Automation
             Entity = Entity.Null;
             AccumulatedDistance = default;
         }
+    }
+    
+    [MaterialProperty("_Rotation", MaterialPropertyFormat.Float)]
+    public struct ShaderRotation : IComponentData
+    {
+        public float Value;
     }
 
     struct BeltSegment : IComponentData
