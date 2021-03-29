@@ -20,6 +20,7 @@ namespace Automation
         public void InsertItem(ref DynamicBuffer<BeltItem> items, BeltItem segmentItem, int2 dropPoint)
         {
             segmentItem.Distance = 0;
+            segmentItem.SubDistance = 0;
             var p = End;
             var d = RevDir;
             int itemIdx = 0;
@@ -51,7 +52,7 @@ namespace Automation
         }
         public readonly float3 ComputePosition(float dist)
         {
-            return new float3(DropPoint.x + dist * RevDir.x, 1, DropPoint.y + dist * RevDir.y);
+            return new float3(DropPoint.x + (dist) * RevDir.x, 1, DropPoint.y + (dist) * RevDir.y);
         }
     }
 }

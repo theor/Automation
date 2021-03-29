@@ -10,6 +10,7 @@ namespace Automation
     {
         private float _acc;
         private BeltUpdateCommandSystem _ecbSystem;
+        public const int BeltDistanceSubDiv = 2;
 
         protected override void OnCreate()
         {
@@ -31,9 +32,16 @@ namespace Automation
                     for (int i = 0; i < items.Length; i++)
                     {
                         ref var item = ref items.ElementAt(i);
-                        if (item.Distance > 0)
+                        if (item.Distance > 0 || item.SubDistance < BeltDistanceSubDiv-1)
                         {
-                            item.Distance--;
+                            
+                            if(item.SubDistance < BeltDistanceSubDiv-1)
+                                item.SubDistance++;
+                            else
+                            {
+                                item.SubDistance = 0;
+                                item.Distance--;
+                            }
                             // Debug.Log("Move");
                             break;
                         }
@@ -48,6 +56,7 @@ namespace Automation
                             {
                                 ref var nextItem = ref items.ElementAt(i);
                                 nextItem.Distance++;
+                                // nextItem.SubDistance+= item.SubDistance;
                             }
 
                             i--;

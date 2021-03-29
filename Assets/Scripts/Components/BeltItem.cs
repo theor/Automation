@@ -6,6 +6,7 @@ namespace Automation
     {
         public EntityType Type;
         public byte Distance;
+        public byte SubDistance;
         public Entity Entity;
         public byte AccumulatedDistance;
 
@@ -13,6 +14,7 @@ namespace Automation
         {
             Type = type;
             Distance = distance;
+            SubDistance = 0;
             Entity = Entity.Null;
             AccumulatedDistance = default;
         }
