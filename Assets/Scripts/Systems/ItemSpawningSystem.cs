@@ -22,18 +22,19 @@ namespace Automation
         
         protected override void OnUpdate()
         {
-            var entityCommandBuffer = new EntityCommandBuffer(Allocator.Temp, PlaybackPolicy.MultiPlayback);
+            // var entityCommandBuffer = new EntityCommandBuffer(Allocator.Temp, PlaybackPolicy.MultiPlayback);
             
             var settings = GetSingleton<World.Settings>();
-
             Entities.ForEach((Entity e, in SpawnedItemVisual v) =>
             {
                 
                 var b = EntityManager.GetBuffer<BeltItem>(v.BeltSegment);
                 b.ElementAt(v.BeltItemIndex).Entity = e;
-                entityCommandBuffer.RemoveComponent<SpawnedItemVisual>(e);
+                // entityCommandBuffer.RemoveComponent<SpawnedItemVisual>(e);
             }).WithoutBurst().Run();
-            entityCommandBuffer.Playback(EntityManager);
+            // entityCommandBuffer.Playback(EntityManager);
+            
+            EntityManager.RemoveComponent<SpawnedItemVisual>(GetEntityQuery(ComponentType.ReadWrite<SpawnedItemVisual>()));
             
             var prefab = GetSingleton<World.Prefabs>();
 

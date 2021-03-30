@@ -29,6 +29,7 @@ namespace Automation
         public void Convert(Entity entity, EntityManager dstManager, GameObjectConversionSystem conversionSystem)
         {
             dstManager.AddComponentData(entity, new Settings {BeltDistanceSubDiv = (ushort) SubdivCount});
+            
             var prefabEntity = conversionSystem.GetPrimaryEntity(BeltPrefab);
             var itemEntity = conversionSystem.GetPrimaryEntity(ItemPrefab);
             var item2Entity = conversionSystem.GetPrimaryEntity(Item2Prefab);
@@ -38,8 +39,9 @@ namespace Automation
                 ItemPrefab = itemEntity,
                 Item2Prefab = item2Entity,
             });
-            MakeT(dstManager, prefabEntity);
-            // Make3BeltsU(dstManager, prefabEntity, 300);
+            
+            // MakeT(dstManager, prefabEntity);
+            Make3BeltsU(dstManager, prefabEntity, 1000000);
         }
 
         private void MakeT(EntityManager dstManager, Entity prefabEntity)
@@ -54,10 +56,10 @@ namespace Automation
                 (EntityType.A, 1),(EntityType.A, 4)
             );
             CreateSegment(dstManager, new BeltSegment
-            {
-                Start = new int2(13, 2),
-                End = new int2(13, 10),
-            }, entities[1],
+                {
+                    Start = new int2(13, 2),
+                    End = new int2(13, 10),
+                }, entities[1],
                 (EntityType.B, 8));
             entities.Dispose();
         }
@@ -67,7 +69,7 @@ namespace Automation
             var entities = dstManager.Instantiate(prefabEntity, 3, Allocator.Temp);
             CreateSegment(dstManager, new BeltSegment
                 {
-                    Start = new int2(-300, 5),
+                    Start = new int2(-itemCount, 5),
                     End = new int2(12, 5),
                     Next = entities[1],
                 }, entities[0],
@@ -95,7 +97,8 @@ namespace Automation
             entities.Dispose();
         }
 
-        private Entity CreateSegment(EntityManager dstManager, BeltSegment segment, Entity beltSegmentEntity, params (EntityType, ushort)[] beltItems)
+        private void CreateSegment(EntityManager dstManager, BeltSegment segment, Entity beltSegmentEntity,
+            params (EntityType, ushort)[] beltItems)
         {
             dstManager.AddComponentData(beltSegmentEntity, segment);
             var length = math.max(math.abs(segment.End.x - segment.Start.x), math.abs(segment.End.y - segment.Start.y));
@@ -123,7 +126,6 @@ namespace Automation
             dstManager.AddComponentData(beltSegmentEntity, new ShaderRotation() {Value = yRot});
             dstManager.AddComponentData(beltSegmentEntity, new NonUniformScale {Value = size});
             dstManager.AddBuffer<InsertInQueue>(beltSegmentEntity);
-            return beltSegmentEntity;
         }
 
         public void DeclareReferencedPrefabs(List<GameObject> referencedPrefabs)
