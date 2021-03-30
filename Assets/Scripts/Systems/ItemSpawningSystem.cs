@@ -24,6 +24,7 @@ namespace Automation
         {
             var entityCommandBuffer = new EntityCommandBuffer(Allocator.Temp, PlaybackPolicy.MultiPlayback);
             
+            var settings = GetSingleton<World.Settings>();
 
             Entities.ForEach((Entity e, in SpawnedItemVisual v) =>
             {
@@ -44,7 +45,7 @@ namespace Automation
                     for (int i = 0; i < items.Length; i++)
                     {
                         ref var item = ref items.ElementAt(i);
-                        dist += (item.Distance /(float)BeltUpdateSystem.BeltDistanceSubDiv);
+                        dist += (item.Distance /(float)settings.BeltDistanceSubDiv);
                         var beltItemVisual = new BeltItemVisual
                         {
                             Type = item.Type,

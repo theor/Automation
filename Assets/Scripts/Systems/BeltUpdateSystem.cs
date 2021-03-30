@@ -10,7 +10,7 @@ namespace Automation
     {
         private float _acc;
         private BeltUpdateCommandSystem _ecbSystem;
-        public const ushort BeltDistanceSubDiv = 8;
+        // public const ushort BeltDistanceSubDiv = 2;
 
         protected override void OnCreate()
         {
@@ -20,6 +20,7 @@ namespace Automation
 
         protected override void OnUpdate()
         {
+            var settings = GetSingleton<World.Settings>();
             _acc += Time.DeltaTime;
             // if (_acc > .5f)
             {
@@ -34,7 +35,7 @@ namespace Automation
                         ref var item = ref items.ElementAt(i);
                         if (segment.Next == Entity.Null)
                         {
-                            if (item.Distance > BeltDistanceSubDiv)
+                            if (item.Distance > settings.BeltDistanceSubDiv)
                             {
                                 item.Distance--;
                                 break;
@@ -91,6 +92,8 @@ namespace Automation
 
         protected override void OnUpdate()
         {
+            
+            var settings = GetSingleton<World.Settings>();
             Dependency = Entities
                 .ForEach(
                     (Entity e, int entityInQueryIndex, DynamicBuffer<BeltItem> items,DynamicBuffer<InsertInQueue> toInsert, ref BeltSegment segment) =>
@@ -98,7 +101,7 @@ namespace Automation
                         for (var index = 0; index < toInsert.Length; index++)
                         {
                             InsertInQueue insertInQueue = toInsert[index];
-                            segment.InsertItem(ref items, insertInQueue.Item, insertInQueue.DropPoint);
+                            segment.InsertItem(in settings, ref items, insertInQueue.Item, insertInQueue.DropPoint);
                         }
 
                         toInsert.Clear();

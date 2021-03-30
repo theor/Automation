@@ -19,10 +19,11 @@ namespace Automation
 
         public override string ToString() => $"Segment {Start} -> {End}";
 
-        public void InsertItem(ref DynamicBuffer<BeltItem> items, BeltItem segmentItem, int2 dropPoint)
+        public void InsertItem(in World.Settings settings, ref DynamicBuffer<BeltItem> items, BeltItem segmentItem,
+            int2 dropPoint)
         {
             segmentItem.Distance = 0;
-            var targetDist = math.abs(dropPoint.x - DropPoint.x + dropPoint.y - DropPoint.y) * BeltUpdateSystem.BeltDistanceSubDiv;
+            var targetDist = math.abs(dropPoint.x - DropPoint.x + dropPoint.y - DropPoint.y) * settings.BeltDistanceSubDiv;
             int itemIdx = 0;
             int iter = 1000;
             var dist = 0;
