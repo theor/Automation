@@ -32,17 +32,27 @@ namespace Automation
             {
                 if(iter-- <= 0)
                     throw new NotImplementedException();
-                dist++;
+                var delta = (ushort) (targetDist - dist);
                 if (itemIdx < items.Length)
                 {
-                    if (items[itemIdx].Distance == segmentItem.Distance)
+                    ref var item = ref items.ElementAt(itemIdx);
+                    if (item.Distance + dist < targetDist)
                     {
-                        segmentItem.Distance = 1;
+                        dist += item.Distance;
                         itemIdx++;
-                        continue;
+                    }
+                    else
+                    {
+                        segmentItem.Distance = delta;
+                        item.Distance -= segmentItem.Distance;
+                        break;
                     }
                 }
-                segmentItem.Distance++;
+                else
+                {
+                    segmentItem.Distance = delta;
+                    break;
+                }
             }
         
             // if (itemWillBeTickedAgain)
