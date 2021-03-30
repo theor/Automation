@@ -33,6 +33,8 @@ namespace Automation
             var prefabEntity = conversionSystem.GetPrimaryEntity(BeltPrefab);
             var itemEntity = conversionSystem.GetPrimaryEntity(ItemPrefab);
             var item2Entity = conversionSystem.GetPrimaryEntity(Item2Prefab);
+            dstManager.AddComponent<BeltItemVisual>(itemEntity);
+            dstManager.AddComponent<BeltItemVisual>(item2Entity);
             dstManager.AddComponentData(entity, new Prefabs
             {
                 BeltPrefab = prefabEntity,
@@ -41,7 +43,7 @@ namespace Automation
             });
             
             // MakeT(dstManager, prefabEntity);
-            Make3BeltsU(dstManager, prefabEntity, 2, 5);
+            Make3BeltsU(dstManager, prefabEntity, 2, 500);
         }
 
         private void MakeT(EntityManager dstManager, Entity prefabEntity)
