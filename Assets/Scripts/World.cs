@@ -33,8 +33,8 @@ namespace Automation
             var prefabEntity = conversionSystem.GetPrimaryEntity(BeltPrefab);
             var itemEntity = conversionSystem.GetPrimaryEntity(ItemPrefab);
             var item2Entity = conversionSystem.GetPrimaryEntity(Item2Prefab);
-            dstManager.AddComponent<BeltItemVisual>(itemEntity);
-            dstManager.AddComponent<BeltItemVisual>(item2Entity);
+            // dstManager.AddComponent<BeltItemVisual>(itemEntity);
+            // dstManager.AddComponent<BeltItemVisual>(item2Entity);
             dstManager.AddComponentData(entity, new Prefabs
             {
                 BeltPrefab = prefabEntity,
@@ -43,7 +43,7 @@ namespace Automation
             });
             
             // MakeT(dstManager, prefabEntity);
-            Make3BeltsU(dstManager, prefabEntity, 2, 500);
+            Make3BeltsU(dstManager, prefabEntity, 100, 10000);
         }
 
         private void MakeT(EntityManager dstManager, Entity prefabEntity)
@@ -74,8 +74,8 @@ namespace Automation
                 CreateSegment(dstManager, entities[2+i],
                     new BeltSegment
                     {
-                        Start = new int2(-5*(beltCount-i)-1, 5),
-                        End = new int2(-5*(beltCount-i-1), 5),
+                        Start = new int2(-100*(beltCount-i)-1, 5),
+                        End = new int2(-100*(beltCount-i-1), 5),
                         Next = i < beltCount - 1 ? entities[2+i+1] : first,
                     }, /*i != 0 ? null :*/ Enumerable.Range(0, itemCount).Select(x => (x % 2 == 0 ? EntityType.A : EntityType.B, (ushort) 2)).ToArray()
                 );

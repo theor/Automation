@@ -31,7 +31,7 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <NoWarn></NoWarn>
-    <AllowUnsafeBlocks>False</AllowUnsafeBlocks>
+    <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
     <TreatWarningsAsErrors>False</TreatWarningsAsErrors>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
@@ -41,7 +41,7 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <NoWarn></NoWarn>
-    <AllowUnsafeBlocks>False</AllowUnsafeBlocks>
+    <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
     <TreatWarningsAsErrors>False</TreatWarningsAsErrors>
   </PropertyGroup>
   <PropertyGroup>
@@ -52,20 +52,9 @@
     <ImplicitlyExpandDesignTimeFacades>false</ImplicitlyExpandDesignTimeFacades>
   </PropertyGroup>
   <ItemGroup>
-     <Compile Include="Assets\Scripts\Components\InsertInQueue.cs" />
-     <Compile Include="Assets\Scripts\Components\BeltItem.cs" />
-     <Compile Include="Assets\Scripts\Systems\BeltUpdateSystem.cs" />
-     <Compile Include="Assets\Scripts\SimpleCameraController.cs" />
-     <Compile Include="Assets\Scripts\Systems\ItemSpawningSystem.cs" />
-     <Compile Include="Assets\Scripts\World.cs" />
-     <Compile Include="Assets\Scripts\Systems\ItemSpawningCommandSystem.cs" />
-     <Compile Include="Assets\Scripts\Systems\ItemPositionUpdateSystem.cs" />
      <Compile Include="Assets\TutorialInfo\Scripts\Readme.cs" />
-     <Compile Include="Assets\Scripts\Components\EntityType.cs" />
-     <Compile Include="Assets\Scripts\Components\BeltSegment.cs" />
-     <Compile Include="Assets\Scripts\Components\ShaderRotation.cs" />
-     <Compile Include="Assets\Scripts\PointExt.cs" />
-     <Compile Include="Assets\Scripts\Components\BeltItemVisual.cs" />
+     <None Include="Assets\NewSurfaceShader 1.shader" />
+     <None Include="Assets\NewSurfaceShader.shader" />
  <Reference Include="UnityEngine">
  <HintPath>C:/Program Files/Unity/Hub/Editor/2020.2.1f1/Editor/Data/Managed/UnityEngine/UnityEngine.dll</HintPath>
  </Reference>
@@ -292,7 +281,19 @@
  <HintPath>C:/Users/theor/Automation/Library/PackageCache/com.unity.collections@0.15.0-preview.21/Unity.Collections.LowLevel.ILSupport/Unity.Collections.LowLevel.ILSupport.dll</HintPath>
  </Reference>
  <Reference Include="Unity.Burst.Unsafe">
- <HintPath>C:/Users/theor/Automation/Library/PackageCache/com.unity.burst@1.4.1/Unity.Burst.Unsafe.dll</HintPath>
+ <HintPath>C:/Users/theor/Automation/Library/PackageCache/com.unity.burst@1.5.0/Unity.Burst.Unsafe.dll</HintPath>
+ </Reference>
+ <Reference Include="Unity.Burst.Cecil.Mdb">
+ <HintPath>C:/Users/theor/Automation/Library/PackageCache/com.unity.burst@1.5.0/Unity.Burst.CodeGen/Unity.Burst.Cecil.Mdb.dll</HintPath>
+ </Reference>
+ <Reference Include="Unity.Burst.Cecil.Pdb">
+ <HintPath>C:/Users/theor/Automation/Library/PackageCache/com.unity.burst@1.5.0/Unity.Burst.CodeGen/Unity.Burst.Cecil.Pdb.dll</HintPath>
+ </Reference>
+ <Reference Include="Unity.Burst.Cecil">
+ <HintPath>C:/Users/theor/Automation/Library/PackageCache/com.unity.burst@1.5.0/Unity.Burst.CodeGen/Unity.Burst.Cecil.dll</HintPath>
+ </Reference>
+ <Reference Include="Unity.Burst.Cecil.Rocks">
+ <HintPath>C:/Users/theor/Automation/Library/PackageCache/com.unity.burst@1.5.0/Unity.Burst.CodeGen/Unity.Burst.Cecil.Rocks.dll</HintPath>
  </Reference>
  <Reference Include="Newtonsoft.Json">
  <HintPath>C:/Users/theor/Automation/Library/PackageCache/com.unity.nuget.newtonsoft-json@2.0.0-preview/Runtime/Newtonsoft.Json.dll</HintPath>
@@ -791,6 +792,10 @@
  </Reference>
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="Scripts.csproj">
+      <Project>{497b3dac-98ed-ba3c-d8be-c047276dae71}</Project>
+      <Name>Scripts</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it.

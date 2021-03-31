@@ -6,13 +6,11 @@ namespace Automation
     {
         public EntityType Type;
         public ushort Distance;
-        public Entity Entity;
 
         public BeltItem(EntityType type, ushort distance)
         {
             Type = type;
             Distance = distance;
-            Entity = Entity.Null;
         }
     }
 }

@@ -31,7 +31,7 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <NoWarn></NoWarn>
-    <AllowUnsafeBlocks>False</AllowUnsafeBlocks>
+    <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
     <TreatWarningsAsErrors>False</TreatWarningsAsErrors>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
@@ -41,7 +41,7 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <NoWarn></NoWarn>
-    <AllowUnsafeBlocks>False</AllowUnsafeBlocks>
+    <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
     <TreatWarningsAsErrors>False</TreatWarningsAsErrors>
   </PropertyGroup>
   <PropertyGroup>
@@ -285,7 +285,19 @@
  <HintPath>C:/Users/theor/Automation/Library/PackageCache/com.unity.collections@0.15.0-preview.21/Unity.Collections.LowLevel.ILSupport/Unity.Collections.LowLevel.ILSupport.dll</HintPath>
  </Reference>
  <Reference Include="Unity.Burst.Unsafe">
- <HintPath>C:/Users/theor/Automation/Library/PackageCache/com.unity.burst@1.4.1/Unity.Burst.Unsafe.dll</HintPath>
+ <HintPath>C:/Users/theor/Automation/Library/PackageCache/com.unity.burst@1.5.0/Unity.Burst.Unsafe.dll</HintPath>
+ </Reference>
+ <Reference Include="Unity.Burst.Cecil.Mdb">
+ <HintPath>C:/Users/theor/Automation/Library/PackageCache/com.unity.burst@1.5.0/Unity.Burst.CodeGen/Unity.Burst.Cecil.Mdb.dll</HintPath>
+ </Reference>
+ <Reference Include="Unity.Burst.Cecil.Pdb">
+ <HintPath>C:/Users/theor/Automation/Library/PackageCache/com.unity.burst@1.5.0/Unity.Burst.CodeGen/Unity.Burst.Cecil.Pdb.dll</HintPath>
+ </Reference>
+ <Reference Include="Unity.Burst.Cecil">
+ <HintPath>C:/Users/theor/Automation/Library/PackageCache/com.unity.burst@1.5.0/Unity.Burst.CodeGen/Unity.Burst.Cecil.dll</HintPath>
+ </Reference>
+ <Reference Include="Unity.Burst.Cecil.Rocks">
+ <HintPath>C:/Users/theor/Automation/Library/PackageCache/com.unity.burst@1.5.0/Unity.Burst.CodeGen/Unity.Burst.Cecil.Rocks.dll</HintPath>
  </Reference>
  <Reference Include="ICSharpCode.NRefactory">
  <HintPath>C:/Users/theor/Automation/Library/PackageCache/com.unity.render-pipelines.core@10.2.2/Editor/ShaderGenerator/ICSharpCode.NRefactory.dll</HintPath>
@@ -796,6 +808,10 @@
     <ProjectReference Include="Assembly-CSharp.csproj">
       <Project>{fdbf6e37-ea45-cc50-6e8e-3f24ef61bb40}</Project>
       <Name>Assembly-CSharp</Name>
+    </ProjectReference>
+    <ProjectReference Include="Scripts.csproj">
+      <Project>{497b3dac-98ed-ba3c-d8be-c047276dae71}</Project>
+      <Name>Scripts</Name>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
