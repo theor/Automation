@@ -21,10 +21,12 @@ namespace Automation
          public NativeArray<float3> _positions1;
          public int RenderCount;
          public JobHandle SetupDependency;
+         private NativeArray<int> _instanceIndex;
 
          protected override void OnCreate()
          {
              _iss = World.GetExistingSystem<ItemSpawningSystem>();
+             _instanceIndex = new NativeArray<int>(1, Allocator.Persistent);
              base.OnCreate();
          }
 
@@ -32,6 +34,7 @@ namespace Automation
          {
              base.OnDestroy();
              _positions1.Dispose();
+             _instanceIndex.Dispose();
          }
 
          protected override unsafe void OnUpdate()
@@ -40,7 +43,7 @@ namespace Automation
              if(!_iss._count.IsCreated || _iss._count[0] == 0)
                 return;
              var settings = GetSingleton<World.Settings>();
-             RenderCount = math.min(99,_iss._count[0]);
+             RenderCount = math.min(499,_iss._count[0]);
              // Debug.Log("count " + count);
              if (!_positions1.IsCreated || RenderCount >= _positions1.Length)
              {
@@ -49,25 +52,10 @@ namespace Automation
                  _positions1 = new NativeArray<float3>(RenderCount, Allocator.Persistent);
              }
              var nativeArray = (float3*)_positions1.GetUnsafePtr();
-             var instanceIndex = new NativeArray<int>(1, Allocator.Temp);
-             instanceIndex[0] = -1;
-             var instanceIndexPtr = (int*)instanceIndex.GetUnsafePtr();
+             _instanceIndex[0] = -1;
+             var instanceIndexPtr = (int*)_instanceIndex.GetUnsafePtr();
+             var renderCount = RenderCount;
 
-             // var renderedCount = new NativeArray<int>(1, Allocator.TempJob);
-             // renderedCount[0] = 0;
-             // var renderedCountPtr = (int*)renderedCount.GetUnsafePtr();
-             // const int limit = 100;
-             // Dependency = Entities.ForEach((DynamicBuffer<BeltItem> items, ref BeltSegment segment) =>
-             //     {
-             //         segment.Rendered = false;
-             //         if (*renderedCountPtr > limit)
-             //             return;
-             //         var newCount = Interlocked.Add(ref UnsafeUtility.AsRef<int>(renderedCountPtr), items.Length);
-             //         if (newCount < limit)
-             //             segment.Rendered = true;
-             //     })
-             //     .WithNativeDisableUnsafePtrRestriction(renderedCountPtr)
-             //     .ScheduleParallel(Dependency);
              SetupDependency = Dependency = Entities.ForEach((DynamicBuffer<BeltItem> items, in BeltSegment segment) =>
                  {
                      if(!segment.Rendered)
@@ -75,23 +63,21 @@ namespace Automation
                      float dist = 0;
                      var dropPoint = segment.DropPoint;
                      var revDir = segment.RevDir;
-                     ref var arrayRef = ref UnsafeUtility.AsRef<int>(instanceIndexPtr);
+                     ref var instanceIndexRef = ref UnsafeUtility.AsRef<int>(instanceIndexPtr);
                      for (int i = 0; i < items.Length; i++)
                      {
                          ref var item = ref items.ElementAt(i);
                          dist += item.Distance / (float) settings.BeltDistanceSubDiv;
                          var computePosition = new float3(dropPoint.x + dist * revDir.x, 0, dropPoint.y + dist * revDir.y);
-                         var index = Interlocked.Increment(ref arrayRef);
-                         // Debug.Log(index);
-                         nativeArray[index] = computePosition;
+                         var index = Interlocked.Increment(ref instanceIndexRef);
+//                         Debug.Log(String.Format("Index {0} / {1}", index, renderCount));
+                         if(index < renderCount)
+                            nativeArray[index] = computePosition;
                      }
                  })
                  .WithNativeDisableUnsafePtrRestriction(nativeArray)
                  .WithNativeDisableUnsafePtrRestriction(instanceIndexPtr)
                  .ScheduleParallel(Dependency);
-             // renderedCount.Dispose(Dependency);
-
-             // Dependency.Complete(); 
          }
      }
 
