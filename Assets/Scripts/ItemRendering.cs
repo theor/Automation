@@ -15,7 +15,7 @@ namespace Automation
 
         private void OnDestroy()
         {
-            _bufferWithArgs?.Release();
+            _bufferWithArgs?.Dispose();
         }
 
         private void LateUpdate()

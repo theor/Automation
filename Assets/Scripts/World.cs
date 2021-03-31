@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using Unity.Collections;
@@ -126,6 +127,7 @@ namespace Automation
                 (-1,0) => 2,
                 (0,1) => 1,
                 (0,-1) => -1,
+                _ => throw new NotImplementedException(),
             };
             dstManager.AddComponentData(beltSegmentEntity, new RotationEulerXYZ {Value = new float3(0, yRot * math.PI/2f, 0)});
             dstManager.AddComponentData(beltSegmentEntity, new ShaderRotation() {Value = yRot});

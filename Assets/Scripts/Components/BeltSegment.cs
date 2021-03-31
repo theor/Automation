@@ -17,6 +17,17 @@ namespace Automation
         [JsonIgnore] public readonly int2 RevDir => PointExt.Dir(End, Start);
 
         [JsonIgnore] public readonly int2 DropPoint => End + Dir;
+        
+        private static float3 FromI2(int2 i2)
+        {
+            return new float3(i2.x, 0, i2.y);
+        }
+        public readonly AABB AABB =>
+            new AABB
+            {
+                Center = FromI2((Start + End) / 2),
+                Extents = 0.5f * (FromI2(math.abs(End - Start))) + 1,
+            };
 
         public override string ToString() => $"Segment {Start} -> {End}";
 
