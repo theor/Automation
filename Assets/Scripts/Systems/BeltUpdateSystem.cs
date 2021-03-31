@@ -5,7 +5,7 @@ using UnityEngine;
 
 namespace Automation
 {
-    [UpdateAfter(typeof(ItemSpawningCommandSystem))]
+    [UpdateAfter(typeof(ItemSpawningSystem))]
     class BeltUpdateSystem : SystemBase
     {
         private float _acc;
