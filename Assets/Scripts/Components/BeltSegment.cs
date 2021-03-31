@@ -12,6 +12,7 @@ namespace Automation
         public int2 Start;
         public int2 End;
         public Entity Next;
+        public bool Rendered;
         [JsonIgnore] public readonly int2 Dir => PointExt.Dir(Start, End);
         [JsonIgnore] public readonly int2 RevDir => PointExt.Dir(End, Start);
 

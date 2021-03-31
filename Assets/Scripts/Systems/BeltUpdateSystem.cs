@@ -50,7 +50,7 @@ namespace Automation
                             item.Distance--;
                             // Debug.Log("Move");
                         }
-
+                        
                         if (item.Distance > 0)
                             break;
 
