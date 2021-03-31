@@ -17,6 +17,7 @@ Shader "Custom/ItemURPShader"
         {
             // The HLSL code block. Unity SRP uses the HLSL language.
             HLSLPROGRAM
+            #pragma multi_compile_instancing
             // This line defines the name of the vertex shader.
             #pragma vertex vert
             // This line defines the name of the fragment shader.
@@ -59,9 +60,40 @@ Shader "Custom/ItemURPShader"
                 // from object space to homogenous clip space.
                 // float3 w = TransformObjectToWorld(IN.positionOS.xyz) + float3(-(float)instanceID,0,0);// _AllInstancesTransformBuffer[instanceID];
                 // OUT.positionHCS = TransformWorldToHClip(w);
-                OUT.positionHCS = TransformObjectToHClip(
-                 IN.positionOS.xyz + _AllInstancesTransformBuffer[instanceID]//float3((float)instanceID,0,0)
-                );// + TransformWorldToHClip();
+                // VertexPositionInputs vertexInput = GetVertexPositionInputs(IN.positionOS.xyz);
+                // OUT.positionHCS = TransformObjectToHClip(
+                //  IN.positionOS.xyz + _AllInstancesTransformBuffer[instanceID]//float3((float)instanceID,0,0)
+                // );
+
+                float3 pos = _AllInstancesTransformBuffer[instanceID];
+                float4x4 tr = {
+                    1,0,0,0,
+                    0,1,0,0,
+                    0,0,1,0,
+                    pos.x,pos.y,pos.z,1,
+                };
+                float scale = 3;
+                float4x4 scaleMat= {
+                    scale,0,0,0,
+                    0,scale,0,0,
+                    0,0,scale,0,
+                    0,0,0,1,
+                };
+                OUT.positionHCS = mul(
+                    GetWorldToHClipMatrix(),
+                    mul(
+                        mul(
+                            mul(
+                                GetObjectToWorldMatrix(),
+                                scaleMat
+                            ),
+                            float4(
+                                IN.positionOS.xyz, 1.0)
+                        ),
+                     tr)
+                );
+                
+                // OUT.positionHCS.w /= 2;
                 OUT.color = half4(0.5, 1, 0.1, 1);
                 // OUT.color = _AllInstancesTransformBuffer[instanceID];
                 // Returning the output.
