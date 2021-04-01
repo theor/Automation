@@ -1,5 +1,6 @@
 using Unity.Collections;
 using Unity.Entities;
+using Unity.Jobs;
 using Unity.Mathematics;
 using UnityEngine;
 
@@ -8,6 +9,28 @@ namespace Automation
     [UpdateAfter(typeof(CullingSystem))]
     class BeltUpdateSystem : SystemBase
     {
+        struct S : IJobParallelFor
+        {
+            public NativeArray<Entity> SimulationChunksFirstSegment;
+            public ComponentDataFromEntity<BeltSegment> Segments;
+            public BufferFromEntity<BeltItem> Items;
+            public void Execute(int index)
+            {
+                Entity e = SimulationChunksFirstSegment[index];
+                do
+                {
+                    var segment = Segments[e];
+                    var items = Items[e];
+                    
+                    
+                    
+                    
+                    e = segment.Next;
+
+                } while (e != Entity.Null);
+            }
+        }
+
         protected override void OnUpdate()
         {
             World.Settings settings = GetSingleton<World.Settings>();
@@ -28,6 +51,13 @@ namespace Automation
 
                             continue;
                         }
+                        
+                        if (item.Distance > settings.BeltDistanceSubDiv)
+                        {
+                            item.Distance--;
+                        }
+                        else
+                            break;
 
                         // there's a next segment
                         if (item.Distance > 0)

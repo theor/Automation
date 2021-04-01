@@ -42,13 +42,27 @@ namespace Automation
                 ItemPrefab = itemEntity,
                 Item2Prefab = item2Entity,
             });
-            
+            var entities =
             // MakeT(dstManager, prefabEntity);
             MakeT2(dstManager, prefabEntity);
+            var segments = conversionSystem.GetComponentDataFromEntity<BeltSegment>();
+            for (var index = 0; index < entities.Length; index++)
+            {
+                var e = entities[index];
+                var next = segments[e].Next;
+                if (next != Entity.Null)
+                {
+                    var beltSegment = segments[next];
+                    beltSegment.Prev = e;
+                    segments[next] = beltSegment;
+                }
+            }
+
             // Make3BeltsU(dstManager, prefabEntity, 100, 10000);
+            entities.Dispose();
         }
 
-        private void MakeT(EntityManager dstManager, Entity prefabEntity)
+        private NativeArray<Entity> MakeT(EntityManager dstManager, Entity prefabEntity)
         {
             var entities = dstManager.Instantiate(prefabEntity, 2, Allocator.Temp);
             CreateSegment(dstManager, entities[0],
@@ -64,10 +78,10 @@ namespace Automation
                     Start = new int2(13, 2),
                     End = new int2(13, 10),
                 }, (EntityType.B, 8));
-            entities.Dispose();
+            return entities;
         }
 
-        private void MakeT2(EntityManager dstManager, Entity prefabEntity)
+        private NativeArray<Entity> MakeT2(EntityManager dstManager, Entity prefabEntity)
         {
             var entities = dstManager.Instantiate(prefabEntity, 2, Allocator.Temp);
             CreateSegment(dstManager, entities[0],
@@ -85,10 +99,11 @@ namespace Automation
                     Start = new int2(13, 5),
                     End = new int2(13, 7),
                 }, (EntityType.B, 1),(EntityType.B, 1),(EntityType.B, 1));
-            entities.Dispose();
+            return entities;
+
         }
 
-        private void Make3BeltsU(EntityManager dstManager, Entity prefabEntity, int itemCount = 2, int beltCount = 2)
+        private NativeArray<Entity> Make3BeltsU(EntityManager dstManager, Entity prefabEntity, int itemCount = 2, int beltCount = 2)
         {
             var entities = dstManager.Instantiate(prefabEntity, 2 + beltCount, Allocator.Temp);
             Entity first = entities[0];
@@ -121,7 +136,7 @@ namespace Automation
             //     End = new int2(3,6),
             //     Next = entities[0],
             // }, entities[3]);
-            entities.Dispose();
+            return entities;
         }
 
         private void CreateSegment(EntityManager dstManager, Entity beltSegmentEntity, BeltSegment segment,
