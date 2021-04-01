@@ -29,6 +29,7 @@ namespace Automation
                             continue;
                         }
 
+                        // there's a next segment
                         if (item.Distance > 0)
                         {
                             item.Distance--;
@@ -38,20 +39,16 @@ namespace Automation
                         if (item.Distance > 0)
                             break;
 
-                        if (segment.Next != Entity.Null)
+                        int2 dropPoint = segment.DropPoint;
+                        queues[segment.Next].Add(new InsertInQueue(item, dropPoint));
+                        items.RemoveAt(i);
+                        if (i < items.Length)
                         {
-                            int2 dropPoint = segment.DropPoint;
-                            queues[segment.Next].Add(new InsertInQueue(item, dropPoint));
-                            items.RemoveAt(i);
-                            if (i < items.Length)
-                            {
-                                ref BeltItem nextItem = ref items.ElementAt(i);
-                                nextItem.Distance++;
-                                // nextItem.SubDistance+= item.SubDistance;
-                            }
-
-                            i--;
+                            ref BeltItem nextItem = ref items.ElementAt(i);
+                            nextItem.Distance++;
                         }
+
+                        i--;
                     }
                 }).Schedule(Dependency);
             // ugly. use a parallel nativestream ? actual insertions probably need to be sequential anyway

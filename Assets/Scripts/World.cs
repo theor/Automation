@@ -44,7 +44,8 @@ namespace Automation
             });
             
             // MakeT(dstManager, prefabEntity);
-            Make3BeltsU(dstManager, prefabEntity, 100, 10000);
+            MakeT2(dstManager, prefabEntity);
+            // Make3BeltsU(dstManager, prefabEntity, 100, 10000);
         }
 
         private void MakeT(EntityManager dstManager, Entity prefabEntity)
@@ -63,6 +64,27 @@ namespace Automation
                     Start = new int2(13, 2),
                     End = new int2(13, 10),
                 }, (EntityType.B, 8));
+            entities.Dispose();
+        }
+
+        private void MakeT2(EntityManager dstManager, Entity prefabEntity)
+        {
+            var entities = dstManager.Instantiate(prefabEntity, 2, Allocator.Temp);
+            CreateSegment(dstManager, entities[0],
+                new BeltSegment
+                {
+                    Start = new int2(3, 5),
+                    End = new int2(12, 5),
+                    Next = entities[1],
+                },(EntityType.A, 1)
+                // , (EntityType.A, 4)
+                );
+            CreateSegment(dstManager, entities[1],
+                new BeltSegment
+                {
+                    Start = new int2(13, 5),
+                    End = new int2(13, 7),
+                }, (EntityType.B, 1),(EntityType.B, 1),(EntityType.B, 1));
             entities.Dispose();
         }
 
