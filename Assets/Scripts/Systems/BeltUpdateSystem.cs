@@ -131,6 +131,26 @@ namespace Automation
                 Segments = GetComponentDataFromEntity<BeltSegment>(),
                 SimulationChunksFirstSegment = _simulationChunksFirstSegment,
             }.Schedule(1, 1, Dependency);
+            Entities.ForEach(
+                (Entity e, int entityInQueryIndex, DynamicBuffer<BeltItem> items, in BeltSegment segment) =>
+                {
+                    var p = BeltSegment.FromI2(segment.DropPoint);
+                    var rev = BeltSegment.FromI2(segment.RevDir)/settings.BeltDistanceSubDiv;
+                    for (int i = 0; i < items.Length; i++)
+                    {
+                        var n = items[i].Distance * rev;
+                        Debug.DrawRay((Vector3)p + Vector3.up * (i+1)/10f, n, HaltonSequence.ColorFromIndex(i+1));
+                        p += n;
+                    }
+
+                    if (segment.DistanceToInsertAtStart == 0)
+                    {
+                        Debug.DrawRay(p, Vector3.up, Color.white);
+                    }
+                    else
+                        Debug.DrawRay((Vector3)p + Vector3.up * .1f, segment.DistanceToInsertAtStart*rev, HaltonSequence.ColorFromIndex(0));
+                    
+                }).Run();
             // Dependency = Entities.ForEach(
             //     (Entity e, int entityInQueryIndex, DynamicBuffer<BeltItem> items, in BeltSegment segment) =>
             //     {
@@ -181,6 +201,30 @@ namespace Automation
             // _ecbSystem.AddJobHandleForProducer(Dependency);
             // ecbuffer.Playback(EntityManager);
             // _ecbSystem.pos
+        }
+    }
+    
+    public static class HaltonSequence
+    {
+        public static double Halton(int index, int nbase)
+        {
+            double fraction = 1;
+            double result = 0;
+            while (index > 0)
+            {
+                fraction /= nbase;
+                result += fraction * (index % nbase);
+                index = ~~(index / nbase);
+            }
+
+            return result;
+        }
+
+        // shortcut for later
+        public static int HaltonInt(int index, int nbase, int max) => (int) (Halton(index, nbase) * max);
+        public static Color ColorFromIndex(int index, int hbase = 3, float v = 0.5f)
+        {
+            return Color.HSVToRGB((float) HaltonSequence.Halton(index, hbase), 1, v);
         }
     }
 }

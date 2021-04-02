@@ -14,12 +14,13 @@ namespace Automation
         public Entity Next;
         public Entity Prev;
         public bool Rendered;
+        public ushort DistanceToInsertAtStart;
         [JsonIgnore] public readonly int2 Dir => PointExt.Dir(Start, End);
         [JsonIgnore] public readonly int2 RevDir => PointExt.Dir(End, Start);
 
         [JsonIgnore] public readonly int2 DropPoint => End + Dir;
-        
-        private static float3 FromI2(int2 i2)
+
+        public static float3 FromI2(int2 i2)
         {
             return new float3(i2.x, 0, i2.y);
         }
@@ -78,6 +79,18 @@ namespace Automation
             //     Items[itemIdx] = i;
             // }
             items.Insert(itemIdx, segmentItem);
+        }
+
+        public void ComputeInsertionPoint(ref DynamicBuffer<BeltItem> items, ushort subdivCount)
+        {
+            var acc = 0;
+            for (int i = 0; i < items.Length; i++)
+            {
+                acc += items[i].Distance;
+            }
+
+            var length = math.abs(DropPoint-Start) * subdivCount;
+            this.DistanceToInsertAtStart = (ushort) (length.x + length.y - acc);
         }
     }
 }

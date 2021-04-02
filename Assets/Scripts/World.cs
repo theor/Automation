@@ -49,12 +49,17 @@ namespace Automation
             for (var index = 0; index < entities.Length; index++)
             {
                 var e = entities[index];
-                var next = dstManager.GetComponentData<BeltSegment>(e).Next;
+                var segment = dstManager.GetComponentData<BeltSegment>(e);
+                var dynamicBuffer = dstManager.GetBuffer<BeltItem>(e);
+                segment.ComputeInsertionPoint(ref dynamicBuffer, (ushort)SubdivCount);
+                dstManager.SetComponentData(e, segment);
+                
+                var next = segment.Next;
                 if (next != Entity.Null)
                 {
-                    var beltSegment = dstManager.GetComponentData<BeltSegment>(next);
-                    beltSegment.Prev = e;
-                    dstManager.SetComponentData(next, beltSegment);
+                    var nextBeltSegment = dstManager.GetComponentData<BeltSegment>(next);
+                    nextBeltSegment.Prev = e;
+                    dstManager.SetComponentData(next, nextBeltSegment);
                 }
             }
 
@@ -98,7 +103,8 @@ namespace Automation
                 {
                     Start = new int2(13, 5),
                     End = new int2(13, 7),
-                }, (EntityType.B, 1),(EntityType.B, 1),(EntityType.B, 1));
+                }, (EntityType.B, 1),(EntityType.B, 1)//,(EntityType.B, 1)
+                                                      );
             return entities;
 
         }
