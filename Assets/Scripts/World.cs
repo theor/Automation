@@ -44,17 +44,17 @@ namespace Automation
             });
             var entities =
             // MakeT(dstManager, prefabEntity);
-            MakeT2(dstManager, prefabEntity);
+                MakeT2(dstManager, prefabEntity);
             var segments = conversionSystem.GetComponentDataFromEntity<BeltSegment>();
             for (var index = 0; index < entities.Length; index++)
             {
                 var e = entities[index];
-                var next = segments[e].Next;
+                var next = dstManager.GetComponentData<BeltSegment>(e).Next;
                 if (next != Entity.Null)
                 {
-                    var beltSegment = segments[next];
+                    var beltSegment = dstManager.GetComponentData<BeltSegment>(next);
                     beltSegment.Prev = e;
-                    segments[next] = beltSegment;
+                    dstManager.SetComponentData(next, beltSegment);
                 }
             }
 

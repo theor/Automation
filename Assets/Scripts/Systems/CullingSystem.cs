@@ -59,7 +59,9 @@ namespace Automation
                     // Debug.DrawLine(sAABB.Min, sAABB.Max, c);
                     // Debug.DrawLine(FromI2(s.Start, 1), FromI2(s.End, 1), c);
                 })
-                .WithNativeDisableUnsafePtrRestriction(countPtr).ScheduleParallel();
+                .WithNativeDisableUnsafePtrRestriction(countPtr)
+                .WithNativeDisableParallelForRestriction(cullingPlanes)
+                .ScheduleParallel();
         }
 
         private static Vector3 FromI2(int2 i2, float y = 0)

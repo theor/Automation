@@ -27,7 +27,8 @@ namespace Automation
         protected override void OnDestroy()
         {
             base.OnDestroy();
-            RenderedItemPositions.Dispose();
+            if(RenderedItemPositions.IsCreated)
+                RenderedItemPositions.Dispose();
             _itemPositionArrayIndex.Dispose();
         }
 
