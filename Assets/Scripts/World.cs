@@ -91,7 +91,7 @@ namespace Automation
                     End = new int2(12, 5),
                     Next = entities[1],
                 },(EntityType.A, 1)
-                // , (EntityType.A, 4)
+                , (EntityType.A, 4)
                 );
             CreateSegment(dstManager, entities[1],
                 new BeltSegment
