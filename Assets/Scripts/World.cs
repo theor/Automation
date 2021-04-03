@@ -52,6 +52,7 @@ namespace Automation
             });
             var entities =
                 MakeSplitter(dstManager, prefabEntity);
+                // Make3BeltsU(dstManager, prefabEntity, 2, 2);
                 // Make3BeltsU(dstManager, prefabEntity, 100, 10000);
             // MakeT(dstManager, prefabEntity);
                 // MakeT2(dstManager, prefabEntity);
@@ -88,7 +89,21 @@ namespace Automation
                 new BeltSplitter(new int2(6,0), new int2(7,0), entities[2], entities[3]));
             // incoming
             CreateSegment(dstManager, entities[1],
-                new BeltSegment(new int2(0, 0), new int2(5, 0), entities[0]),(EntityType.A, 1), (EntityType.A, 4));
+                new BeltSegment(new int2(0, 0), new int2(5, 0), entities[0]),
+                (EntityType.A, 1)
+                , (EntityType.A, 1)
+                , (EntityType.A, 1)
+                , (EntityType.A, 1)
+                , (EntityType.A, 1)
+                , (EntityType.A, 1)
+                , (EntityType.A, 1)
+                , (EntityType.A, 1)
+                , (EntityType.A, 1)
+                , (EntityType.A, 1)
+                , (EntityType.A, 1)
+                , (EntityType.A, 1)
+                , (EntityType.A, 1)
+                );
             // outcoming
             CreateSegment(dstManager, entities[2],
                 new BeltSegment(new int2(7, 0),new int2(10, 0)));
@@ -167,7 +182,7 @@ namespace Automation
             var items = dstManager.AddBuffer<BeltItem>(beltSegmentEntity);
             dstManager.SetName(beltSegmentEntity, "splitter");
 
-            var size = new float3(1, .1f, 2);
+            var size = new float3(1, 1.2f, 2);
             var yRot = GetRotationValue(dir);
             dstManager.AddComponentData(beltSegmentEntity, new RotationEulerXYZ {Value = new float3(0, yRot * math.PI/2f, 0)});
             dstManager.AddComponentData(beltSegmentEntity, new ShaderRotation {Value = yRot});

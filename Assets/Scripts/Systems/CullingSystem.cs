@@ -9,6 +9,7 @@ using FrustumPlanes = Unity.Rendering.FrustumPlanes;
 namespace Automation
 {
     // [UpdateInGroup(typeof(PresentationSystemGroup))]
+    [UpdateAfter(typeof(BeltSplitterUpdateSystem))]
     class CullingSystem : SystemBase
     {
         private Vector3[] _corners;
@@ -44,7 +45,7 @@ namespace Automation
 
             var cullingPlanes = planes;
             FrustumPlanes.FromCamera(camera, cullingPlanes);
-            Entities.ForEach((DynamicBuffer<BeltItem> items, ref BeltSegment s) =>
+            Dependency = Entities.ForEach((DynamicBuffer<BeltItem> items, ref BeltSegment s) =>
                 {
                     var sAABB = s.AABB;
                     s.Rendered = FrustumPlanes.Intersect(cullingPlanes, sAABB) != FrustumPlanes.IntersectResult.Out;
@@ -61,7 +62,22 @@ namespace Automation
                 })
                 .WithNativeDisableUnsafePtrRestriction(countPtr)
                 .WithNativeDisableParallelForRestriction(cullingPlanes)
-                .ScheduleParallel();
+                .ScheduleParallel(Dependency);
+            var countPtr2 = (int*)RenderedItemCount.GetUnsafePtr();
+            Dependency = Entities.ForEach((ref BeltSplitter s) =>
+            {
+                // var sAABB = s.AABB;
+                // s.Rendered = FrustumPlanes.Intersect(cullingPlanes, sAABB) != FrustumPlanes.IntersectResult.Out;
+                // if (s.Rendered)
+                int items = s.Input.Type != EntityType.None ? 1 : 0;
+                items += s.Output1.Type != EntityType.None ? 1 : 0;
+                items += s.Output2.Type != EntityType.None ? 1 : 0;
+
+                Interlocked.Add(ref UnsafeUtility.AsRef<int>(countPtr2), items);
+            })
+                .WithNativeDisableUnsafePtrRestriction(countPtr2)
+                // .WithNativeDisableParallelForRestriction(cullingPlanes)
+                .ScheduleParallel(Dependency);
         }
 
         private static Vector3 FromI2(int2 i2, float y = 0)

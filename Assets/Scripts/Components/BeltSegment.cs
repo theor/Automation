@@ -17,8 +17,13 @@ namespace Automation
         public readonly int2 End;
         public readonly Entity Next1;
         public readonly Entity Next2;
+        public BeltItem Input;
+        public BeltItem Output1;
+        public BeltItem Output2;
+        public bool UseOutput2;
+        [JsonIgnore] public readonly int2 RevDir => PointExt.Dir(End, Start);
 
-        public BeltSplitter(int2 start, int2 end, Entity next1, Entity next2)
+        public BeltSplitter(int2 start, int2 end, Entity next1, Entity next2) : this()
         {
             Start = start;
             End = end;

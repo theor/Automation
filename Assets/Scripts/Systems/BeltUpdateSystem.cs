@@ -14,17 +14,55 @@ namespace Automation
     {
         protected override void OnUpdate()
         {
-            Entities.ForEach((Entity e, BeltSplitter s) =>
+            var settings = GetSingleton<World.Settings>();
+            var segments = GetComponentDataFromEntity<BeltSegment>();
+            var items = GetBufferFromEntity<BeltItem>();
+            Entities.ForEach((Entity e, ref BeltSplitter s) =>
             {
+                if (s.Input.Type != EntityType.None)
+                {
+                    BeltItem i = s.UseOutput2 ? s.Output2 : s.Output1;
+                    if (i.Type == EntityType.None)
+                    {
+                        // move it straight to output
+                        if (s.UseOutput2)
+                            s.Output2 = s.Input;
+                        else
+                            s.Output1 = s.Input;
+                        s.Input.Type = EntityType.None;
+                        s.UseOutput2 = !s.UseOutput2;
+                    }
+                }
+
+                ProcessOutput(ref segments, ref items, ref s.Output1, s.Next1);
+                ProcessOutput(ref segments, ref items, ref s.Output2, s.Next2);
                 // s.
             }).Schedule();
         }
+
+        private static void ProcessOutput(ref ComponentDataFromEntity<BeltSegment> segments,
+            ref BufferFromEntity<BeltItem> items, ref BeltItem sOutput1, Entity enext)
+        {
+            if (sOutput1.Type != EntityType.None)
+            {
+                var next = segments[enext];
+                if (next.DistanceToInsertAtStart == 0) // full
+                    return;
+                if (sOutput1.Distance > 0)
+                {
+                    sOutput1.Distance--;
+                    return;
+                }
+
+                if (BeltUpdateSystem.InsertInSegment(ref items, ref segments, sOutput1, enext))
+                    sOutput1.Type = EntityType.None;
+            }
+        }
     }
-    [UpdateAfter(typeof(CullingSystem))]
     class BeltUpdateSystem : SystemBase
     {
         private NativeArray<Entity> _simulationChunksFirstSegment;
-        private EntityQueryMask _hasBeltSegmentMask;
+        private EntityQueryMask _hasBeltSegmentMask, _hasBeltSplitterMask;
 
         [BurstCompile]
         struct BeltUpdateJob : IJobParallelFor
@@ -32,8 +70,11 @@ namespace Automation
             public NativeArray<Entity> SimulationChunksFirstSegment;
 
             public EntityQueryMask HasBeltSegmentMask;
+            public EntityQueryMask HasBeltSplitterMask;
             [NativeDisableContainerSafetyRestriction]
             public ComponentDataFromEntity<BeltSegment> Segments;
+            [NativeDisableContainerSafetyRestriction]
+            public ComponentDataFromEntity<BeltSplitter> Splitters;
             [NativeDisableContainerSafetyRestriction]
             public BufferFromEntity<BeltItem> Items;
             public World.Settings settings;
@@ -61,6 +102,7 @@ namespace Automation
                             Segments[e] = segment;
                             break;
                         }
+
                         // no next segment, so BeltDistanceSubDiv is the min distance
                         // continue to move the next item on the belt
                         if (segment.Next == Entity.Null)
@@ -70,38 +112,53 @@ namespace Automation
 
                         if (!HasBeltSegmentMask.Matches(segment.Next))
                         {
+                            if (HasBeltSplitterMask.Matches(segment.Next))
+                            {
+                                var splitter = Splitters[segment.Next];
+                                // no room in input
+                                if (splitter.Input.Type != EntityType.None)
+                                    continue;
+
+                                if (item.Distance > 0) // still inserting
+                                {
+                                    item.Distance--;
+                                    segment.DistanceToInsertAtStart++;
+                                    Segments[e] = segment;
+                                    break;
+                                }
+
+                                // will be update this frame
+                                item.Distance = (ushort) (settings.BeltDistanceSubDiv);
+                                splitter.Input = item;
+                                Splitters[segment.Next] = splitter;
+                                items.RemoveAt(i);
+                                // Debug.Log("MOVE TO SPLITTER");
+                                i--;
+                            }
+
                             continue;
                         }
 
                         // only move if the next segment has room
                         var nextBeltSegment = Segments[segment.Next];
-                        if(nextBeltSegment.DistanceToInsertAtStart == 0)
-                            continue; // move next item on this belt
+                        if (nextBeltSegment.DistanceToInsertAtStart == 0)
+                            continue;
 
                         if (item.Distance > 0) // still inserting
                         {
-                             item.Distance--;
-                             segment.DistanceToInsertAtStart++;
-                             Segments[e] = segment;
-                             break;
+                            item.Distance--;
+                            segment.DistanceToInsertAtStart++;
+                            Segments[e] = segment;
+                        }
+                        else if (InsertInSegment(ref Items, ref Segments, item, segment.Next))
+                        {
+                            items.RemoveAt(i);
+                            i--;
                         }
 
-                        // insertion done, distance == 0
-                        var nextSegmentItems = Items[segment.Next];
-
-                        item.Distance = nextBeltSegment.DistanceToInsertAtStart;
-                        nextBeltSegment.DistanceToInsertAtStart = 0;
-                        Segments[segment.Next] = nextBeltSegment;
-
-                        nextSegmentItems.Insert(nextSegmentItems.Length, item);
-                        items.RemoveAt(i);
-
-                        i--;
+                        break;
                     }
-
-
                     e = segment.Prev;
-
                 } while (e != Entity.Null);
             }
         }
@@ -122,6 +179,7 @@ namespace Automation
             {
                 var ns = new NativeList<Entity>(Allocator.Persistent);
                 var mask = _hasBeltSegmentMask = GetEntityQuery(ComponentType.ReadOnly<BeltSegment>()).GetEntityQueryMask();
+                _hasBeltSplitterMask = GetEntityQuery(ComponentType.ReadOnly<BeltSplitter>()).GetEntityQueryMask();
                 Entities.ForEach((Entity e, int nativeThreadIndex, in BeltSegment s) =>
                 {
                     if (s.Next == Entity.Null || !mask.Matches(s.Next))
@@ -132,15 +190,21 @@ namespace Automation
                 _simulationChunksFirstSegment = ns;
             }
 
+            Debug.Log(String.Join(", ", _simulationChunksFirstSegment.ToArray()));
+
             World.Settings settings = GetSingleton<World.Settings>();
-            Dependency = new BeltUpdateJob
+            // Dependency =
+                new BeltUpdateJob
             {
                 settings = settings,
                 HasBeltSegmentMask = _hasBeltSegmentMask,
+                HasBeltSplitterMask = _hasBeltSplitterMask,
                 Items = GetBufferFromEntity<BeltItem>(),
                 Segments = GetComponentDataFromEntity<BeltSegment>(),
+                Splitters = GetComponentDataFromEntity<BeltSplitter>(),
                 SimulationChunksFirstSegment = _simulationChunksFirstSegment,
-            }.Schedule(1, 1, Dependency);
+            }.Run(_simulationChunksFirstSegment.Length);
+                // .Schedule(_simulationChunksFirstSegment.Length, 1, Dependency);
 
 
             // Debug draw
@@ -165,6 +229,28 @@ namespace Automation
                             Debug.DrawRay((Vector3)p + Vector3.up * .1f, segment.DistanceToInsertAtStart*rev, HaltonSequence.ColorFromIndex(0));
 
                     }).Run();
+        }
+
+        public static bool InsertInSegment(
+            ref BufferFromEntity<BeltItem> segmentItems,
+            ref ComponentDataFromEntity<BeltSegment> segments,
+            BeltItem item, Entity nextSegment)
+        {
+            // only move if the next segment has room
+            var nextBeltSegment = segments[nextSegment];
+
+            if (item.Distance > 0) // still inserting
+                return false;
+
+            // insertion done, distance == 0
+            var nextSegmentItems = segmentItems[nextSegment];
+
+            item.Distance = nextBeltSegment.DistanceToInsertAtStart;
+            nextBeltSegment.DistanceToInsertAtStart = 0;
+            segments[nextSegment] = nextBeltSegment;
+
+            nextSegmentItems.Insert(nextSegmentItems.Length, item);
+            return true;
         }
     }
 }

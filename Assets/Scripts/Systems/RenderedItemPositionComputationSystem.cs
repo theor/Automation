@@ -33,11 +33,11 @@ namespace Automation
         }
 
         protected override unsafe void OnUpdate()
-         
+
         {
             if(!_cullingSystem.RenderedItemCount.IsCreated || _cullingSystem.RenderedItemCount[0] == 0)
                 return;
-            
+
             RenderedItemCount = _cullingSystem.RenderedItemCount[0];
             if (!RenderedItemPositions.IsCreated || RenderedItemCount != RenderedItemPositions.Length)
             {
@@ -45,14 +45,14 @@ namespace Automation
                     RenderedItemPositions.Dispose();
                 RenderedItemPositions = new NativeArray<float3>(RenderedItemCount, Allocator.Persistent);
             }
-            
+
             float3* renderedItemPositionsPointer = (float3*)RenderedItemPositions.GetUnsafePtr();
             _itemPositionArrayIndex[0] = -1;
             int* itemPositionArrayIndexPointer = (int*)_itemPositionArrayIndex.GetUnsafePtr();
 
             int renderedItemCount = RenderedItemCount;
             World.Settings settings = GetSingleton<World.Settings>();
-            SetupDependency = Dependency = Entities.ForEach((DynamicBuffer<BeltItem> items, in BeltSegment segment) =>
+            Dependency = Entities.ForEach((DynamicBuffer<BeltItem> items, in BeltSegment segment) =>
                 {
                     if(!segment.Rendered)
                         return;
@@ -73,6 +73,32 @@ namespace Automation
                 .WithNativeDisableUnsafePtrRestriction(renderedItemPositionsPointer)
                 .WithNativeDisableUnsafePtrRestriction(itemPositionArrayIndexPointer)
                 .ScheduleParallel(Dependency);
+            SetupDependency = Dependency = Entities.ForEach((in BeltSplitter splitter) =>
+                {
+                    ref int instanceIndexRef = ref UnsafeUtility.AsRef<int>(itemPositionArrayIndexPointer);
+                    var revDir = splitter.RevDir;
+                    ProcessSplitterItem(splitter.Input, splitter, settings, revDir, ref instanceIndexRef, renderedItemCount, renderedItemPositionsPointer);
+                    ProcessSplitterItem(splitter.Output1, splitter, settings, revDir, ref instanceIndexRef, renderedItemCount, renderedItemPositionsPointer);
+                    ProcessSplitterItem(splitter.Output2, splitter, settings, revDir, ref instanceIndexRef, renderedItemCount, renderedItemPositionsPointer, 1);
+                })
+                .WithNativeDisableUnsafePtrRestriction(renderedItemPositionsPointer)
+                .WithNativeDisableUnsafePtrRestriction(itemPositionArrayIndexPointer)
+                .ScheduleParallel(Dependency);
+        }
+
+        private static unsafe void ProcessSplitterItem(in BeltItem item, in BeltSplitter splitter,
+            in World.Settings settings,
+            int2 revDir, ref int instanceIndexRef, int renderedItemCount, float3* renderedItemPositionsPointer,
+            int zOffset = 0)
+        {
+            if (item.Type == EntityType.None)
+                return;
+            var dist = item.Distance / (float) settings.BeltDistanceSubDiv;
+            var cross = -new int2(-revDir.y, revDir.x) * zOffset;
+            float3 computePosition = new float3(splitter.End.x + dist * revDir.x + cross.x, 0, splitter.End.y + dist * revDir.y + cross.y);
+            int index = Interlocked.Increment(ref instanceIndexRef);
+            if (index < renderedItemCount)
+                renderedItemPositionsPointer[index] = computePosition;
         }
     }
 }
