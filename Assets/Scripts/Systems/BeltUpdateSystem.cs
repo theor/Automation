@@ -124,10 +124,27 @@ namespace Automation
 
         protected override void OnUpdate()
         {
+            World.Settings settings = GetSingleton<World.Settings>();
             if (!_simulationChunksFirstSegment.IsCreated)
             {
-                var ns = new NativeList<Entity>(Allocator.Persistent);
                 var mask = _hasBeltSegmentMask = GetEntityQuery(ComponentType.ReadOnly<BeltSegment>()).GetEntityQueryMask();
+                var segments = GetComponentDataFromEntity<BeltSegment>();
+                Entities.WithAll<World.BeltTag>() .ForEach((Entity e, DynamicBuffer<BeltItem> dynamicBuffer, ref BeltSegment segment) =>
+                {
+                    segment.ComputeInsertionPoint(ref dynamicBuffer, settings.BeltDistanceSubDiv);
+
+                    var next = segment.Next;
+                    if (next != Entity.Null)
+                    {
+                        if (mask.Matches(next))
+                        {
+                            var nextBeltSegment = segments[next];
+                            nextBeltSegment.Prev = e;
+                            segments[next] = nextBeltSegment;
+                        }
+                    }
+                }).Run();
+                var ns = new NativeList<Entity>(Allocator.Persistent);
                 _hasBeltSplitterMask = GetEntityQuery(ComponentType.ReadOnly<BeltSplitter>()).GetEntityQueryMask();
                 Entities.ForEach((Entity e, int nativeThreadIndex, in BeltSegment s) =>
                 {
@@ -141,7 +158,6 @@ namespace Automation
 
             // Debug.Log(String.Join(", ", _simulationChunksFirstSegment.ToArray()));
 
-            World.Settings settings = GetSingleton<World.Settings>();
             Dependency =
                 new BeltUpdateJob
             {

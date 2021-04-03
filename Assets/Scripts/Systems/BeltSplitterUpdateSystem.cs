@@ -2,6 +2,7 @@ using Unity.Entities;
 
 namespace Automation
 {
+
     [UpdateAfter(typeof(BeltUpdateSystem))]
     class BeltSplitterUpdateSystem : SystemBase
     {

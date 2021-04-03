@@ -1,8 +1,10 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Unity.Burst;
 using Unity.Collections;
 using Unity.Entities;
+using Unity.Jobs;
 using Unity.Mathematics;
 using Unity.Rendering;
 using Unity.Transforms;
@@ -56,28 +58,28 @@ namespace Automation
                 // Make3BeltsU(dstManager, prefabEntity, 100, 10000);
             // MakeT(dstManager, prefabEntity);
                 // MakeT2(dstManager, prefabEntity);
-            for (var index = 0; index < entities.Length; index++)
-            {
-                var e = entities[index];
-                if (dstManager.HasComponent<BeltSegment>(e))
-                {
-                    var segment = dstManager.GetComponentData<BeltSegment>(e);
-                    var dynamicBuffer = dstManager.GetBuffer<BeltItem>(e);
-                    segment.ComputeInsertionPoint(ref dynamicBuffer, (ushort) SubdivCount);
-                    dstManager.SetComponentData(e, segment);
-
-                    var next = segment.Next;
-                    if (next != Entity.Null)
-                    {
-                        if (dstManager.HasComponent<BeltSegment>(next))
-                        {
-                            var nextBeltSegment = dstManager.GetComponentData<BeltSegment>(next);
-                            nextBeltSegment.Prev = e;
-                            dstManager.SetComponentData(next, nextBeltSegment);
-                        }
-                    }
-                }
-            }
+            // for (var index = 0; index < entities.Length; index++)
+            // {
+            //     var e = entities[index];
+            //     if (dstManager.HasComponent<BeltSegment>(e))
+            //     {
+            //         var segment = dstManager.GetComponentData<BeltSegment>(e);
+            //         var dynamicBuffer = dstManager.GetBuffer<BeltItem>(e);
+            //         segment.ComputeInsertionPoint(ref dynamicBuffer, (ushort) SubdivCount);
+            //         dstManager.SetComponentData(e, segment);
+            //
+            //         var next = segment.Next;
+            //         if (next != Entity.Null)
+            //         {
+            //             if (dstManager.HasComponent<BeltSegment>(next))
+            //             {
+            //                 var nextBeltSegment = dstManager.GetComponentData<BeltSegment>(next);
+            //                 nextBeltSegment.Prev = e;
+            //                 dstManager.SetComponentData(next, nextBeltSegment);
+            //             }
+            //         }
+            //     }
+            // }
 
             entities.Dispose();
         }
@@ -176,8 +178,11 @@ namespace Automation
             return entities;
         }
 
+        public struct BeltTag : IComponentData{}
+
         private void CreateSplitter(EntityManager dstManager, Entity beltSegmentEntity, BeltSplitter segment)
         {
+            dstManager.AddComponent<BeltTag>(beltSegmentEntity);
             dstManager.AddComponentData(beltSegmentEntity, segment);
             // dstManager.AddComponent<DisableRendering>(beltSegmentEntity);
             var length = math.max(math.abs(segment.End.x - segment.Start.x), math.abs(segment.End.y - segment.Start.y));
@@ -200,6 +205,7 @@ namespace Automation
         private void CreateSegment(EntityManager dstManager, Entity beltSegmentEntity, BeltSegment segment,
             params (EntityType, ushort)[] beltItems)
         {
+            dstManager.AddComponent<BeltTag>(beltSegmentEntity);
             dstManager.AddComponentData(beltSegmentEntity, segment);
             // dstManager.AddComponent<DisableRendering>(beltSegmentEntity);
             var length = math.max(math.abs(segment.End.x - segment.Start.x), math.abs(segment.End.y - segment.Start.y));
