@@ -36,9 +36,9 @@ namespace Automation
             {
                 BeltDistanceSubDiv = (ushort) SubdivCount,
                 DebugDraw = DebugDraw,
-                
+
             });
-            
+
             var prefabEntity = conversionSystem.GetPrimaryEntity(BeltPrefab);
             var itemEntity = conversionSystem.GetPrimaryEntity(ItemPrefab);
             var item2Entity = conversionSystem.GetPrimaryEntity(Item2Prefab);
@@ -50,10 +50,11 @@ namespace Automation
                 ItemPrefab = itemEntity,
                 Item2Prefab = item2Entity,
             });
-            var entities = Make3BeltsU(dstManager, prefabEntity, 100, 10000);
+            var entities =
+                // MakeSplitter(dstManager, prefabEntity);
+                Make3BeltsU(dstManager, prefabEntity, 100, 10000);
             // MakeT(dstManager, prefabEntity);
                 // MakeT2(dstManager, prefabEntity);
-            var segments = conversionSystem.GetComponentDataFromEntity<BeltSegment>();
             for (var index = 0; index < entities.Length; index++)
             {
                 var e = entities[index];
@@ -61,7 +62,7 @@ namespace Automation
                 var dynamicBuffer = dstManager.GetBuffer<BeltItem>(e);
                 segment.ComputeInsertionPoint(ref dynamicBuffer, (ushort)SubdivCount);
                 dstManager.SetComponentData(e, segment);
-                
+
                 var next = segment.Next;
                 if (next != Entity.Null)
                 {
@@ -74,22 +75,29 @@ namespace Automation
             entities.Dispose();
         }
 
+        private NativeArray<Entity> MakeSplitter(EntityManager dstManager, Entity prefabEntity)
+        {
+            var entities = dstManager.Instantiate(prefabEntity, 4, Allocator.Temp);
+            CreateSplitter(dstManager, entities[0],
+                new BeltSplitter(new int2(6,0), new int2(7,0), entities[2], entities[3]));
+            // incoming
+            CreateSegment(dstManager, entities[1],
+                new BeltSegment(new int2(0, 0), new int2(5, 0), entities[0]),(EntityType.A, 1), (EntityType.A, 4));
+            // outcoming
+            CreateSegment(dstManager, entities[2],
+                new BeltSegment(new int2(7, 0),new int2(10, 0)));
+            CreateSegment(dstManager, entities[3],
+                new BeltSegment(new int2(7, 1),new int2(10, 1)));
+            return entities;
+        }
+
         private NativeArray<Entity> MakeT(EntityManager dstManager, Entity prefabEntity)
         {
             var entities = dstManager.Instantiate(prefabEntity, 2, Allocator.Temp);
             CreateSegment(dstManager, entities[0],
-                new BeltSegment
-                {
-                    Start = new int2(3, 5),
-                    End = new int2(12, 5),
-                    Next = entities[1],
-                },(EntityType.A, 1), (EntityType.A, 4));
+                new BeltSegment(new int2(3, 5), new int2(12, 5), entities[1]),(EntityType.A, 1), (EntityType.A, 4));
             CreateSegment(dstManager, entities[1],
-                new BeltSegment
-                {
-                    Start = new int2(13, 2),
-                    End = new int2(13, 10),
-                }, (EntityType.B, 8));
+                new BeltSegment(new int2(13, 2), new int2(13, 10)), (EntityType.B, 8));
             return entities;
         }
 
@@ -97,22 +105,14 @@ namespace Automation
         {
             var entities = dstManager.Instantiate(prefabEntity, 2, Allocator.Temp);
             CreateSegment(dstManager, entities[0],
-                new BeltSegment
-                {
-                    Start = new int2(3, 5),
-                    End = new int2(12, 5),
-                    Next = entities[1],
-                }//,(EntityType.A, 1)
+                new BeltSegment(new int2(3, 5), new int2(12, 5), entities[1])
+                //,(EntityType.A, 1)
                 //, (EntityType.A, 4)
                 , (EntityType.B, 3),(EntityType.B, 1),(EntityType.B, 1),(EntityType.B, 1),(EntityType.B, 1)
                 );
             CreateSegment(dstManager, entities[1],
-                new BeltSegment
-                {
-                    Start = new int2(13, 5),
-                    End = new int2(13, 7),
-                }//,(EntityType.B, 1)
-                                                      );
+                new BeltSegment(new int2(13, 5), new int2(13, 7))//,(EntityType.B, 1)
+            );
             return entities;
 
         }
@@ -124,20 +124,16 @@ namespace Automation
             for (int i = 0; i < beltCount; i++)
             {
                 CreateSegment(dstManager, entities[2+i],
-                    new BeltSegment
-                    {
-                        Start = new int2(-100*(beltCount-i)-1, 5),
-                        End = new int2(-100*(beltCount-i-1), 5),
-                        Next = i < beltCount - 1 ? entities[2+i+1] : first,
-                    }, /*i != 0 ? null :*/ Enumerable.Range(0, itemCount).Select(x => (x % 2 == 0 ? EntityType.A : EntityType.B, (ushort) 2)).ToArray()
+                    new BeltSegment(new int2(-100*(beltCount-i)-1, 5),
+                        new int2(-100*(beltCount-i-1), 5),
+                        i < beltCount - 1 ? entities[2+i+1] : first)
+                    , /*i != 0 ? null :*/ Enumerable.Range(0, itemCount).Select(x => (x % 2 == 0 ? EntityType.A : EntityType.B, (ushort) 2)).ToArray()
                 );
             }
-            CreateSegment(dstManager, entities[0], new BeltSegment
-            {
-                Start = new int2(1, 5),
-                End = new int2(1, 10),
-                Next = entities[1],
-            });
+            CreateSegment(dstManager, entities[0], new BeltSegment(new int2(1, 5),
+                new int2(1, 10),
+                entities[1])
+            );
             CreateSegment(dstManager, entities[1], new BeltSegment
             {
                 Start = new int2(1, 11),
@@ -151,6 +147,12 @@ namespace Automation
             //     Next = entities[0],
             // }, entities[3]);
             return entities;
+        }
+
+        private void CreateSplitter(EntityManager dstManager, Entity beltSegmentEntity, BeltSplitter segment)
+        {
+            dstManager.AddComponentData(beltSegmentEntity, segment);
+
         }
 
         private void CreateSegment(EntityManager dstManager, Entity beltSegmentEntity, BeltSegment segment,
@@ -170,7 +172,6 @@ namespace Automation
                     items.Add(new BeltItem(beltItem.Item1, (ushort) (beltItem.Item2*SubdivCount)));
             dstManager.SetName(beltSegmentEntity, "segment");
 
-            // RenderMeshUtility.AddComponents(beltSegmentEntity, dstManager, new RenderMeshDescription(Prefab.GetComponent<Renderer>(), Prefab.GetComponent<MeshFilter>().sharedMesh));
             var size = new float3(length+1, .1f, 1);
             var yRot = (dir.x, dir.y) switch
             {
