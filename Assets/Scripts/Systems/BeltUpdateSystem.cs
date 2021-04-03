@@ -129,7 +129,7 @@ namespace Automation
             {
                 var mask = _hasBeltSegmentMask = GetEntityQuery(ComponentType.ReadOnly<BeltSegment>()).GetEntityQueryMask();
                 var segments = GetComponentDataFromEntity<BeltSegment>();
-                Entities.WithAll<World.BeltTag>() .ForEach((Entity e, DynamicBuffer<BeltItem> dynamicBuffer, ref BeltSegment segment) =>
+                Entities.ForEach((Entity e, DynamicBuffer<BeltItem> dynamicBuffer, ref BeltSegment segment) =>
                 {
                     segment.ComputeInsertionPoint(ref dynamicBuffer, settings.BeltDistanceSubDiv);
 

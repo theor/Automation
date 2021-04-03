@@ -53,7 +53,8 @@ namespace Automation
                 Item2Prefab = item2Entity,
             });
             var entities =
-                MakeSplitter(dstManager, prefabEntity, 100000);
+                MakeSplitter(dstManager, prefabEntity, 10);
+                // MakeSplitter(dstManager, prefabEntity, 100000);
                 // Make3BeltsU(dstManager, prefabEntity, 2, 2);
                 // Make3BeltsU(dstManager, prefabEntity, 100, 10000);
             // MakeT(dstManager, prefabEntity);
@@ -178,11 +179,9 @@ namespace Automation
             return entities;
         }
 
-        public struct BeltTag : IComponentData{}
-
         private void CreateSplitter(EntityManager dstManager, Entity beltSegmentEntity, BeltSplitter segment)
         {
-            dstManager.AddComponent<BeltTag>(beltSegmentEntity);
+            dstManager.AddComponentData(beltSegmentEntity, new ShaderIsSplitter{Value = 1});
             dstManager.AddComponentData(beltSegmentEntity, segment);
             // dstManager.AddComponent<DisableRendering>(beltSegmentEntity);
             var length = math.max(math.abs(segment.End.x - segment.Start.x), math.abs(segment.End.y - segment.Start.y));
@@ -205,7 +204,6 @@ namespace Automation
         private void CreateSegment(EntityManager dstManager, Entity beltSegmentEntity, BeltSegment segment,
             params (EntityType, ushort)[] beltItems)
         {
-            dstManager.AddComponent<BeltTag>(beltSegmentEntity);
             dstManager.AddComponentData(beltSegmentEntity, segment);
             // dstManager.AddComponent<DisableRendering>(beltSegmentEntity);
             var length = math.max(math.abs(segment.End.x - segment.Start.x), math.abs(segment.End.y - segment.Start.y));
