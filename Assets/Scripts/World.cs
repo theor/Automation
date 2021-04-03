@@ -170,7 +170,7 @@ namespace Automation
             var size = new float3(1, .1f, 2);
             var yRot = GetRotationValue(dir);
             dstManager.AddComponentData(beltSegmentEntity, new RotationEulerXYZ {Value = new float3(0, yRot * math.PI/2f, 0)});
-            dstManager.AddComponentData(beltSegmentEntity, new ShaderRotation() {Value = yRot});
+            dstManager.AddComponentData(beltSegmentEntity, new ShaderRotation {Value = yRot});
             dstManager.AddComponentData(beltSegmentEntity, new NonUniformScale {Value = size});
 
         }

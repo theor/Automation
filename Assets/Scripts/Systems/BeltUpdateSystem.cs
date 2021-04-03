@@ -9,16 +9,29 @@ using UnityEngine;
 
 namespace Automation
 {
+    [UpdateAfter(typeof(BeltUpdateSystem))]
+    class BeltSplitterUpdateSystem : SystemBase
+    {
+        protected override void OnUpdate()
+        {
+            Entities.ForEach((Entity e, BeltSplitter s) =>
+            {
+                // s.
+            }).Schedule();
+        }
+    }
     [UpdateAfter(typeof(CullingSystem))]
     class BeltUpdateSystem : SystemBase
     {
         private NativeArray<Entity> _simulationChunksFirstSegment;
+        private EntityQueryMask _hasBeltSegmentMask;
 
         [BurstCompile]
         struct BeltUpdateJob : IJobParallelFor
         {
             public NativeArray<Entity> SimulationChunksFirstSegment;
 
+            public EntityQueryMask HasBeltSegmentMask;
             [NativeDisableContainerSafetyRestriction]
             public ComponentDataFromEntity<BeltSegment> Segments;
             [NativeDisableContainerSafetyRestriction]
@@ -51,6 +64,11 @@ namespace Automation
                         // no next segment, so BeltDistanceSubDiv is the min distance
                         // continue to move the next item on the belt
                         if (segment.Next == Entity.Null)
+                        {
+                            continue;
+                        }
+
+                        if (!HasBeltSegmentMask.Matches(segment.Next))
                         {
                             continue;
                         }
@@ -103,10 +121,10 @@ namespace Automation
             if (!_simulationChunksFirstSegment.IsCreated)
             {
                 var ns = new NativeList<Entity>(Allocator.Persistent);
-
+                var mask = _hasBeltSegmentMask = GetEntityQuery(ComponentType.ReadOnly<BeltSegment>()).GetEntityQueryMask();
                 Entities.ForEach((Entity e, int nativeThreadIndex, in BeltSegment s) =>
                 {
-                    if (s.Next == Entity.Null)
+                    if (s.Next == Entity.Null || !mask.Matches(s.Next))
                     {
                         ns.Add(e);
                     }
@@ -118,6 +136,7 @@ namespace Automation
             Dependency = new BeltUpdateJob
             {
                 settings = settings,
+                HasBeltSegmentMask = _hasBeltSegmentMask,
                 Items = GetBufferFromEntity<BeltItem>(),
                 Segments = GetComponentDataFromEntity<BeltSegment>(),
                 SimulationChunksFirstSegment = _simulationChunksFirstSegment,
