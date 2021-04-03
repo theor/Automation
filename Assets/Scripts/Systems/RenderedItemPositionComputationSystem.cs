@@ -75,6 +75,8 @@ namespace Automation
                 .ScheduleParallel(Dependency);
             SetupDependency = Dependency = Entities.ForEach((in BeltSplitter splitter) =>
                 {
+                    if(!splitter.Rendered)
+                        return;
                     ref int instanceIndexRef = ref UnsafeUtility.AsRef<int>(itemPositionArrayIndexPointer);
                     var revDir = splitter.RevDir;
                     ProcessSplitterItem(splitter.Input, splitter, settings, revDir, ref instanceIndexRef, renderedItemCount, renderedItemPositionsPointer);

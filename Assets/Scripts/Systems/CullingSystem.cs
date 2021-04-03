@@ -66,14 +66,16 @@ namespace Automation
             var countPtr2 = (int*)RenderedItemCount.GetUnsafePtr();
             Dependency = Entities.ForEach((ref BeltSplitter s) =>
             {
-                // var sAABB = s.AABB;
-                // s.Rendered = FrustumPlanes.Intersect(cullingPlanes, sAABB) != FrustumPlanes.IntersectResult.Out;
-                // if (s.Rendered)
-                int items = s.Input.Type != EntityType.None ? 1 : 0;
-                items += s.Output1.Type != EntityType.None ? 1 : 0;
-                items += s.Output2.Type != EntityType.None ? 1 : 0;
+                var sAABB = s.AABB;
+                s.Rendered = FrustumPlanes.Intersect(cullingPlanes, sAABB) != FrustumPlanes.IntersectResult.Out;
+                if (s.Rendered)
+                {
+                    int items = s.Input.Type != EntityType.None ? 1 : 0;
+                    items += s.Output1.Type != EntityType.None ? 1 : 0;
+                    items += s.Output2.Type != EntityType.None ? 1 : 0;
 
-                Interlocked.Add(ref UnsafeUtility.AsRef<int>(countPtr2), items);
+                    Interlocked.Add(ref UnsafeUtility.AsRef<int>(countPtr2), items);
+                }
             })
                 .WithNativeDisableUnsafePtrRestriction(countPtr2)
                 // .WithNativeDisableParallelForRestriction(cullingPlanes)

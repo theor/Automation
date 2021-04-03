@@ -135,6 +135,7 @@ GameObject:
   - component: {fileID: 472005012}
   - component: {fileID: 472005011}
   - component: {fileID: 472005010}
+  - component: {fileID: 472005014}
   m_Layer: 0
   m_Name: Main Camera
   m_TagString: MainCamera
@@ -232,13 +233,53 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 472005009}
-  m_LocalRotation: {x: 0.1705653, y: -0, z: -0, w: 0.9853464}
-  m_LocalPosition: {x: 4.75, y: 1, z: -6.99}
+  m_LocalRotation: {x: 0.36096618, y: 0, z: 0, w: 0.9325789}
+  m_LocalPosition: {x: 5.49, y: 3.41, z: -4.69}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 0}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 19.641, y: 0, z: 0}
+--- !u!114 &472005014
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 472005009}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: be76e5f14cfee674cb30b491fb72b09b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  boost: 3.5
+  positionLerpTime: 0.2
+  mouseSensitivityCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 0.5
+      inSlope: 0
+      outSlope: 5
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    - serializedVersion: 3
+      time: 1
+      value: 2.5
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+  rotationLerpTime: 0.01
+  invertY: 0
 --- !u!1 &600795201
 GameObject:
   m_ObjectHideFlags: 0
@@ -458,8 +499,8 @@ MonoBehaviour:
   BeltPrefab: {fileID: 5280100617728623151, guid: 3a6b25bef06125945a72c30fe2136a74, type: 3}
   ItemPrefab: {fileID: 4136949452293811410, guid: 8e5be7d40e839374583661d143cbd641, type: 3}
   Item2Prefab: {fileID: 4136949452293811410, guid: 52487a4f139e6a440be5d85fe3d089c3, type: 3}
-  SubdivCount: 2
-  DebugDraw: 1
+  SubdivCount: 32
+  DebugDraw: 0
 --- !u!4 &1980665292
 Transform:
   m_ObjectHideFlags: 0

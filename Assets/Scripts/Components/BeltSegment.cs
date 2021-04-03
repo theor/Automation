@@ -21,7 +21,9 @@ namespace Automation
         public BeltItem Output1;
         public BeltItem Output2;
         public bool UseOutput2;
+        public bool Rendered;
         [JsonIgnore] public readonly int2 RevDir => PointExt.Dir(End, Start);
+        public AABB AABB => new AABB {Center = BeltSegment.FromI2(Start), Extents = 3};
 
         public BeltSplitter(int2 start, int2 end, Entity next1, Entity next2) : this()
         {
