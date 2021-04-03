@@ -18,7 +18,7 @@ namespace Automation
         struct BeltUpdateJob : IJobParallelFor
         {
             public NativeArray<Entity> SimulationChunksFirstSegment;
-            
+
             [NativeDisableContainerSafetyRestriction]
             public ComponentDataFromEntity<BeltSegment> Segments;
             [NativeDisableContainerSafetyRestriction]
@@ -35,11 +35,11 @@ namespace Automation
                     var segment = Segments[e];
                     var items = Items[e];
                     // Debug.Log($"{e} {segment} {items.Length}");
-                    
+
                     for (int i = 0; i < items.Length; i++)
                     {
                         ref BeltItem item = ref items.ElementAt(i);
-                        
+
                         // simple case, too far from belt end to care about a next segment
                         if (item.Distance > settings.BeltDistanceSubDiv)
                         {
@@ -49,17 +49,17 @@ namespace Automation
                             break;
                         }
                         // no next segment, so BeltDistanceSubDiv is the min distance
-                        // continue to move the next item on the belt 
+                        // continue to move the next item on the belt
                         if (segment.Next == Entity.Null)
                         {
                             continue;
                         }
-                        
+
                         // only move if the next segment has room
                         var nextBeltSegment = Segments[segment.Next];
                         if(nextBeltSegment.DistanceToInsertAtStart == 0)
                             continue; // move next item on this belt
-                        
+
                         if (item.Distance > 0) // still inserting
                         {
                              item.Distance--;
@@ -67,21 +67,21 @@ namespace Automation
                              Segments[e] = segment;
                              break;
                         }
-                        
+
                         // insertion done, distance == 0
                         var nextSegmentItems = Items[segment.Next];
-                        
+
                         item.Distance = nextBeltSegment.DistanceToInsertAtStart;
                         nextBeltSegment.DistanceToInsertAtStart = 0;
                         Segments[segment.Next] = nextBeltSegment;
-                        
+
                         nextSegmentItems.Insert(nextSegmentItems.Length, item);
                         items.RemoveAt(i);
 
                         i--;
                     }
-                    
-                    
+
+
                     e = segment.Prev;
 
                 } while (e != Entity.Null);
@@ -102,19 +102,16 @@ namespace Automation
         {
             if (!_simulationChunksFirstSegment.IsCreated)
             {
-                NativeStream ns = new NativeStream(JobsUtility.JobWorkerMaximumCount, Allocator.TempJob);
-                var w = ns.AsWriter();
-                Entities.ForEach((Entity e, in BeltSegment s) =>
+                var ns = new NativeList<Entity>(Allocator.Persistent);
+
+                Entities.ForEach((Entity e, int nativeThreadIndex, in BeltSegment s) =>
                 {
-                    w.BeginForEachIndex(1);
                     if (s.Next == Entity.Null)
                     {
-                        w.Write(e);
+                        ns.Add(e);
                     }
-                    w.EndForEachIndex();
                 }).Schedule(Dependency).Complete();
-                _simulationChunksFirstSegment = ns.ToNativeArray<Entity>(Allocator.Persistent);
-                ns.Dispose();
+                _simulationChunksFirstSegment = ns;
             }
 
             World.Settings settings = GetSingleton<World.Settings>();
@@ -125,8 +122,8 @@ namespace Automation
                 Segments = GetComponentDataFromEntity<BeltSegment>(),
                 SimulationChunksFirstSegment = _simulationChunksFirstSegment,
             }.Schedule(1, 1, Dependency);
-            
-            
+
+
             // Debug draw
             if(settings.DebugDraw)
                 Entities.ForEach(
@@ -147,7 +144,7 @@ namespace Automation
                         }
                         else
                             Debug.DrawRay((Vector3)p + Vector3.up * .1f, segment.DistanceToInsertAtStart*rev, HaltonSequence.ColorFromIndex(0));
-                    
+
                     }).Run();
         }
     }

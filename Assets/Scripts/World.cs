@@ -51,24 +51,30 @@ namespace Automation
                 Item2Prefab = item2Entity,
             });
             var entities =
-                // MakeSplitter(dstManager, prefabEntity);
-                Make3BeltsU(dstManager, prefabEntity, 100, 10000);
+                MakeSplitter(dstManager, prefabEntity);
+                // Make3BeltsU(dstManager, prefabEntity, 100, 10000);
             // MakeT(dstManager, prefabEntity);
                 // MakeT2(dstManager, prefabEntity);
             for (var index = 0; index < entities.Length; index++)
             {
                 var e = entities[index];
-                var segment = dstManager.GetComponentData<BeltSegment>(e);
-                var dynamicBuffer = dstManager.GetBuffer<BeltItem>(e);
-                segment.ComputeInsertionPoint(ref dynamicBuffer, (ushort)SubdivCount);
-                dstManager.SetComponentData(e, segment);
-
-                var next = segment.Next;
-                if (next != Entity.Null)
+                if (dstManager.HasComponent<BeltSegment>(e))
                 {
-                    var nextBeltSegment = dstManager.GetComponentData<BeltSegment>(next);
-                    nextBeltSegment.Prev = e;
-                    dstManager.SetComponentData(next, nextBeltSegment);
+                    var segment = dstManager.GetComponentData<BeltSegment>(e);
+                    var dynamicBuffer = dstManager.GetBuffer<BeltItem>(e);
+                    segment.ComputeInsertionPoint(ref dynamicBuffer, (ushort) SubdivCount);
+                    dstManager.SetComponentData(e, segment);
+
+                    var next = segment.Next;
+                    if (next != Entity.Null)
+                    {
+                        if (dstManager.HasComponent<BeltSegment>(next))
+                        {
+                            var nextBeltSegment = dstManager.GetComponentData<BeltSegment>(next);
+                            nextBeltSegment.Prev = e;
+                            dstManager.SetComponentData(next, nextBeltSegment);
+                        }
+                    }
                 }
             }
 
@@ -152,6 +158,20 @@ namespace Automation
         private void CreateSplitter(EntityManager dstManager, Entity beltSegmentEntity, BeltSplitter segment)
         {
             dstManager.AddComponentData(beltSegmentEntity, segment);
+            var length = math.max(math.abs(segment.End.x - segment.Start.x), math.abs(segment.End.y - segment.Start.y));
+            var dir = segment.End - segment.Start;
+            dstManager.SetComponentData(beltSegmentEntity, new Translation
+            {
+                Value = new float3(segment.Start.x, .05f, segment.Start.y + .5f)
+            });
+            var items = dstManager.AddBuffer<BeltItem>(beltSegmentEntity);
+            dstManager.SetName(beltSegmentEntity, "splitter");
+
+            var size = new float3(1, .1f, 2);
+            var yRot = GetRotationValue(dir);
+            dstManager.AddComponentData(beltSegmentEntity, new RotationEulerXYZ {Value = new float3(0, yRot * math.PI/2f, 0)});
+            dstManager.AddComponentData(beltSegmentEntity, new ShaderRotation() {Value = yRot});
+            dstManager.AddComponentData(beltSegmentEntity, new NonUniformScale {Value = size});
 
         }
 
@@ -172,8 +192,16 @@ namespace Automation
                     items.Add(new BeltItem(beltItem.Item1, (ushort) (beltItem.Item2*SubdivCount)));
             dstManager.SetName(beltSegmentEntity, "segment");
 
-            var size = new float3(length+1, .1f, 1);
-            var yRot = (dir.x, dir.y) switch
+            var size = new float3(length+1, .1f, .9f);
+            var yRot = GetRotationValue(dir);
+            dstManager.AddComponentData(beltSegmentEntity, new RotationEulerXYZ {Value = new float3(0, yRot * math.PI/2f, 0)});
+            dstManager.AddComponentData(beltSegmentEntity, new ShaderRotation() {Value = yRot});
+            dstManager.AddComponentData(beltSegmentEntity, new NonUniformScale {Value = size});
+        }
+
+        private static int GetRotationValue(int2 dir)
+        {
+            return (dir.x, dir.y) switch
             {
                 (1, 0) => 0,
                 (-1,0) => 2,
@@ -181,9 +209,6 @@ namespace Automation
                 (0,-1) => -1,
                 _ => throw new NotImplementedException(),
             };
-            dstManager.AddComponentData(beltSegmentEntity, new RotationEulerXYZ {Value = new float3(0, yRot * math.PI/2f, 0)});
-            dstManager.AddComponentData(beltSegmentEntity, new ShaderRotation() {Value = yRot});
-            dstManager.AddComponentData(beltSegmentEntity, new NonUniformScale {Value = size});
         }
 
         public void DeclareReferencedPrefabs(List<GameObject> referencedPrefabs)
