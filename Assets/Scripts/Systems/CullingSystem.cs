@@ -78,7 +78,7 @@ namespace Automation
                 }
             })
                 .WithNativeDisableUnsafePtrRestriction(countPtr2)
-                // .WithNativeDisableParallelForRestriction(cullingPlanes)
+                .WithNativeDisableParallelForRestriction(cullingPlanes)
                 .ScheduleParallel(Dependency);
         }
 

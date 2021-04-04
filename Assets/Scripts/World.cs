@@ -26,6 +26,7 @@ namespace Automation
             public bool DebugDraw;
         }
         public GameObject BeltPrefab;
+        public GameObject SplitterPrefab;
         public GameObject ItemPrefab;
         public GameObject Item2Prefab;
         [Min(1)]
@@ -42,6 +43,7 @@ namespace Automation
             });
 
             var prefabEntity = conversionSystem.GetPrimaryEntity(BeltPrefab);
+            var spltterPrefab = conversionSystem.GetPrimaryEntity(SplitterPrefab);
             var itemEntity = conversionSystem.GetPrimaryEntity(ItemPrefab);
             var item2Entity = conversionSystem.GetPrimaryEntity(Item2Prefab);
             // dstManager.AddComponent<BeltItemVisual>(itemEntity);
@@ -53,8 +55,8 @@ namespace Automation
                 Item2Prefab = item2Entity,
             });
             var entities =
-                MakeSplitter(dstManager, prefabEntity, 10);
-                // MakeSplitter(dstManager, prefabEntity, 100000);
+                // MakeSplitter(dstManager, prefabEntity, spltterPrefab,10);
+                MakeSplitter(dstManager, prefabEntity, spltterPrefab,100000);
                 // Make3BeltsU(dstManager, prefabEntity, 2, 2);
                 // Make3BeltsU(dstManager, prefabEntity, 100, 10000);
             // MakeT(dstManager, prefabEntity);
@@ -85,38 +87,39 @@ namespace Automation
             entities.Dispose();
         }
 
-        private NativeArray<Entity> MakeSplitter(EntityManager dstManager, Entity prefabEntity, int setupCount)
+        private NativeArray<Entity> MakeSplitter(EntityManager dstManager, Entity prefabEntity, Entity splitterPrefab, int setupCount)
         {
-            var entities = dstManager.Instantiate(prefabEntity, 4 * setupCount, Allocator.Temp);
+            var entities = dstManager.Instantiate(prefabEntity, 3 * setupCount, Allocator.Temp);
+            var spltterEntities = dstManager.Instantiate(splitterPrefab, setupCount, Allocator.Temp);
             for (int i = 0; i < setupCount; i++)
             {
 
-            CreateSplitter(dstManager, entities[4*i+0],
-                new BeltSplitter(new int2(6,4*i), new int2(7,4*i),
-                    entities[4*i+2],
-                    entities[4*i+3]));
-            // incoming
-            CreateSegment(dstManager, entities[4*i+1],
-                new BeltSegment(new int2(0, 4*i), new int2(5, 4*i), entities[4*i]),
-                (EntityType.A, 1)
-                , (EntityType.A, 1)
-                , (EntityType.A, 1)
-                , (EntityType.A, 1)
-                , (EntityType.A, 1)
-                , (EntityType.A, 1)
-                , (EntityType.A, 1)
-                , (EntityType.A, 1)
-                , (EntityType.A, 1)
-                , (EntityType.A, 1)
-                , (EntityType.A, 1)
-                , (EntityType.A, 1)
-                , (EntityType.A, 1)
-                );
-            // outcoming
-            CreateSegment(dstManager, entities[4*i+2],
-                new BeltSegment(new int2(7, 4*i),new int2(10, 4*i)));
-            CreateSegment(dstManager, entities[4*i+3],
-                new BeltSegment(new int2(7, 4*i+1),new int2(10, 4*i+1)));
+                CreateSplitter(dstManager, spltterEntities[i],
+                    new BeltSplitter(new int2(6,4*i), new int2(7,4*i),
+                        entities[3*i+1],
+                        entities[3*i+2]));
+                // incoming
+                CreateSegment(dstManager, entities[3*i],
+                    new BeltSegment(new int2(0, 4*i), new int2(5, 4*i), spltterEntities[i]),
+                    (EntityType.A, 1)
+                    , (EntityType.A, 1)
+                    , (EntityType.A, 1)
+                    , (EntityType.A, 1)
+                    , (EntityType.A, 1)
+                    , (EntityType.A, 1)
+                    , (EntityType.A, 1)
+                    , (EntityType.A, 1)
+                    , (EntityType.A, 1)
+                    , (EntityType.A, 1)
+                    , (EntityType.A, 1)
+                    , (EntityType.A, 1)
+                    , (EntityType.A, 1)
+                    );
+                // outcoming
+                CreateSegment(dstManager, entities[3*i+1],
+                    new BeltSegment(new int2(7, 4*i),new int2(10, 4*i)));
+                CreateSegment(dstManager, entities[3*i+2],
+                    new BeltSegment(new int2(7, 4*i+1),new int2(10, 4*i+1)));
             }
             return entities;
         }
@@ -184,20 +187,16 @@ namespace Automation
             dstManager.AddComponentData(beltSegmentEntity, new ShaderIsSplitter{Value = 1});
             dstManager.AddComponentData(beltSegmentEntity, segment);
             // dstManager.AddComponent<DisableRendering>(beltSegmentEntity);
-            var length = math.max(math.abs(segment.End.x - segment.Start.x), math.abs(segment.End.y - segment.Start.y));
             var dir = segment.End - segment.Start;
             dstManager.SetComponentData(beltSegmentEntity, new Translation
             {
-                Value = new float3(segment.Start.x, .05f, segment.Start.y + .5f)
+                Value = new float3(segment.Start.x, .4f, segment.Start.y)
             });
-            var items = dstManager.AddBuffer<BeltItem>(beltSegmentEntity);
             dstManager.SetName(beltSegmentEntity, "splitter");
 
-            var size = new float3(1, 1.2f, 2);
             var yRot = GetRotationValue(dir);
-            dstManager.AddComponentData(beltSegmentEntity, new RotationEulerXYZ {Value = new float3(0, yRot * math.PI/2f, 0)});
-            dstManager.AddComponentData(beltSegmentEntity, new ShaderRotation {Value = yRot});
-            dstManager.AddComponentData(beltSegmentEntity, new NonUniformScale {Value = size});
+            dstManager.AddComponentData(beltSegmentEntity, new RotationEulerXYZ {Value = new float3(math.PI/2f, (yRot+1) * math.PI/2f, 0)});
+            // dstManager.AddComponentData(beltSegmentEntity, new NonUniformScale {Value = size});
 
         }
 
@@ -241,6 +240,7 @@ namespace Automation
         public void DeclareReferencedPrefabs(List<GameObject> referencedPrefabs)
         {
             referencedPrefabs.Add(BeltPrefab);
+            referencedPrefabs.Add(SplitterPrefab);
             referencedPrefabs.Add(ItemPrefab);
             referencedPrefabs.Add(Item2Prefab);
         }
