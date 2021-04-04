@@ -8,9 +8,4 @@ namespace Automation
     {
         public float Value;
     }
-    [MaterialProperty("_IsSplitter", MaterialPropertyFormat.Float)]
-    public struct ShaderIsSplitter : IComponentData
-    {
-        public float Value;
-    }
 }

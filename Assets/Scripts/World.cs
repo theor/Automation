@@ -184,7 +184,6 @@ namespace Automation
 
         private void CreateSplitter(EntityManager dstManager, Entity beltSegmentEntity, BeltSplitter segment)
         {
-            dstManager.AddComponentData(beltSegmentEntity, new ShaderIsSplitter{Value = 1});
             dstManager.AddComponentData(beltSegmentEntity, segment);
             // dstManager.AddComponent<DisableRendering>(beltSegmentEntity);
             var dir = segment.End - segment.Start;
