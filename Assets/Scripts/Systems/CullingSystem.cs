@@ -1,3 +1,4 @@
+using System;
 using System.Threading;
 using Unity.Collections;
 using Unity.Collections.LowLevel.Unsafe;
@@ -20,20 +21,23 @@ namespace Automation
         {
             _corners = new Vector3[4];
             planes = new NativeArray<float4>(6, Allocator.Persistent);
-            RenderedItemCount = new NativeArray<int>(2, Allocator.Persistent);
         }
 
         protected override void OnDestroy()
         {
             planes.Dispose();
-            RenderedItemCount.Dispose();
+            if(RenderedItemCount.IsCreated)
+                RenderedItemCount.Dispose();
         }
 
 
         protected override unsafe void OnUpdate()
         {
-            for (var index = 0; index < RenderedItemCount.Length; index++)
-                RenderedItemCount[index] = 0;
+            if(!RenderedItemCount.IsCreated)
+                RenderedItemCount = new NativeArray<int>(2, Allocator.Persistent);
+            else
+                for (var index = 0; index < RenderedItemCount.Length; index++)
+                    RenderedItemCount[index] = 0;
 
             var countPtr = (int*)RenderedItemCount.GetUnsafePtr();
             var camera = Camera.main;
@@ -53,13 +57,19 @@ namespace Automation
                     s.Rendered = FrustumPlanes.Intersect(cullingPlanes, sAABB) != FrustumPlanes.IntersectResult.Out;
                     if (s.Rendered)
                     {
-                        
                         int* counts = stackalloc int[2];
+                        for (int i = 0; i < 2; i++) counts[i] = 0;
+                        
                         for (int i = 0; i < items.Length; i++)
                             counts[items[i].Type - EntityType.A]++;
 
                         for (int i = 0; i < 2; i++)
-                            Interlocked.Add(ref UnsafeUtility.ArrayElementAsRef<int>(countPtr, i), counts[i]);
+                        {
+                            // var prev = countPtr[i];
+                            // var newCount =
+                                Interlocked.Add(ref UnsafeUtility.ArrayElementAsRef<int>(countPtr, i), counts[i]);
+                            // Debug.Log(String.Format("New count {0}: {1} + {3} => {2}", i, prev, newCount, counts[i]));
+                        }
                     }
                     // Color c = FrustumPlanes.Intersect(cullingPlanes, sAABB) switch
                     // {
@@ -81,7 +91,8 @@ namespace Automation
                 if (s.Rendered)
                 {
                     int* counts = stackalloc int[2];
-
+                    for (int i = 0; i < 2; i++)
+                        counts[i] = 0;
                     if (s.Input.Type != EntityType.None)
                         counts[s.Input.Type - EntityType.A]++;
                     if (s.Output1.Type != EntityType.None)
@@ -89,17 +100,22 @@ namespace Automation
                     if (s.Output2.Type != EntityType.None)
                         counts[s.Output2.Type - EntityType.A]++;
                     for (int i = 0; i < 2; i++)
-                        Interlocked.Add(ref UnsafeUtility.ArrayElementAsRef<int>(countPtr2, i), counts[i]);
+                    {
+                        // var newCount =
+                            Interlocked.Add(ref UnsafeUtility.ArrayElementAsRef<int>(countPtr2, i), counts[i]);
+                        // Debug.Log(String.Format("New count {0} = {1}", i, newCount));
+                    }
                 }
             })
                 .WithNativeDisableUnsafePtrRestriction(countPtr2)
                 .WithNativeDisableParallelForRestriction(cullingPlanes)
                 .ScheduleParallel(Dependency);
-        }
-
-        private static Vector3 FromI2(int2 i2, float y = 0)
-        {
-            return new Vector3(i2.x, y, i2.y);
+            // Dependency.Complete();
+            // for (var index = 0; index < RenderedItemCount.Length; index++)
+            // {
+            //     var i = RenderedItemCount[index];
+            //     Debug.Log($"RenderedItemCount {index} = {i}");
+            // }
         }
     }
 }

@@ -5,10 +5,11 @@ using Unity.Collections.LowLevel.Unsafe;
 using Unity.Entities;
 using Unity.Jobs;
 using Unity.Mathematics;
+using UnityEngine;
 
 namespace Automation
 {
-    [UpdateBefore(typeof(CullingSystem))]
+    [UpdateAfter(typeof(CullingSystem))]
     class RenderedItemPositionComputationSystem : SystemBase
     {
 
@@ -25,7 +26,7 @@ namespace Automation
             _cullingSystem = World.GetExistingSystem<CullingSystem>();
             _itemPositionArrayIndex = new NativeArray<int>(2, Allocator.Persistent);
             RenderedItemPositions = new NativeArray<float3>[2];
-            _renderedItemPositionsPointer = (float3**) UnsafeUtility.Malloc(UnsafeUtility.SizeOf<int>() * 2, 4, Allocator.Persistent);
+            _renderedItemPositionsPointer = (float3**) UnsafeUtility.Malloc(UnsafeUtility.SizeOf<IntPtr>() * 2, UnsafeUtility.AlignOf<IntPtr>(), Allocator.Persistent);
             _segmentQuery = GetEntityQuery(ComponentType.ReadOnly<BeltSegment>(), ComponentType.ReadOnly<BeltItem>());
             _splitterQuery = GetEntityQuery(ComponentType.ReadOnly<BeltSplitter>());
             base.OnCreate();
@@ -34,12 +35,12 @@ namespace Automation
         protected override unsafe void OnDestroy()
         {
             base.OnDestroy();
-            UnsafeUtility.Free(_renderedItemPositionsPointer, Allocator.Persistent);
             for (int i = 0; i < RenderedItemPositions.Length; i++)
             {
                 if(RenderedItemPositions[i].IsCreated)
                     RenderedItemPositions[i].Dispose();
             }
+            UnsafeUtility.Free(_renderedItemPositionsPointer, Allocator.Persistent);
             _itemPositionArrayIndex.Dispose();
         }
 
@@ -56,13 +57,13 @@ namespace Automation
 
             for (var index = 0; index < _cullingSystem.RenderedItemCount.Length; index++)
             {
-                if (!RenderedItemPositions[index].IsCreated || _cullingSystem.RenderedItemCount[index] != RenderedItemPositions.Length)
+                if (!RenderedItemPositions[index].IsCreated || _cullingSystem.RenderedItemCount[index] != RenderedItemPositions[index].Length)
                 {
                     if (RenderedItemPositions[index].IsCreated)
                         RenderedItemPositions[index].Dispose();
+                    // Debug.Log($"Allocate {(EntityType.A + (byte)index)} {_cullingSystem.RenderedItemCount[index]}");
                     RenderedItemPositions[index] = new NativeArray<float3>(_cullingSystem.RenderedItemCount[index], Allocator.Persistent);
                 }
-                
             }
 
             {
@@ -77,6 +78,7 @@ namespace Automation
             Dependency = new ComputePositionsJob
             {
                 Settings = settings,
+                // EntityHandle = GetEntityTypeHandle(),
                 BeltItemsHandle = GetBufferTypeHandle<BeltItem>(),
                 BeltSegmentsHandle = GetComponentTypeHandle<BeltSegment>(),
                 _renderedItemPositionsPointer = _renderedItemPositionsPointer,
@@ -141,7 +143,7 @@ namespace Automation
                 {
                     var splitter = splitters[chunkIdx];
                     if(!splitter.Rendered)
-                        return;
+                        continue;
                     // ref int instanceIndexRef =
                     //     ref UnsafeUtility.ArrayElementAsRef<int>(itemPositionArrayIndexPointer,
                     //         item.Type - EntityType.A);
@@ -174,11 +176,12 @@ namespace Automation
 
         internal struct ComputePositionsJob : IJobChunk
         {
+            public World.Settings Settings;
             [ReadOnly]
             public ComponentTypeHandle<BeltSegment> BeltSegmentsHandle;
             [ReadOnly]
             public BufferTypeHandle<BeltItem> BeltItemsHandle;
-            public World.Settings Settings;
+            // [ReadOnly]
             // public EntityTypeHandle EntityHandle;
             [NativeDisableUnsafePtrRestriction]
             public unsafe float3** _renderedItemPositionsPointer;
@@ -191,12 +194,16 @@ namespace Automation
                 // var entities = chunk.GetNativeArray(EntityHandle);
                 var segments = chunk.GetNativeArray(BeltSegmentsHandle);
                 var allItems = chunk.GetBufferAccessor(BeltItemsHandle);
-                for (int chunkIdx = 0; chunkIdx != segments.Length; chunkIdx++)
+                for (int chunkIdx = 0; chunkIdx != chunk.Count; chunkIdx++)
                 {
-                    var items = allItems[chunkIdx];
                     var segment = segments[chunkIdx];
                     if (!segment.Rendered)
-                        return;
+                    {
+                        // Debug.Log(String.Format("  SKIP {0}", entities[chunkIdx]));
+                        continue;
+                    }
+                    var items = allItems[chunkIdx];
+                    // Debug.Log(String.Format("  Process {0} {1} items", entities[chunkIdx], items.Length));
                     float dist = 0;
                     int2 dropPoint = segment.DropPoint;
                     int2 revDir = segment.RevDir;
@@ -210,6 +217,7 @@ namespace Automation
                             ref UnsafeUtility.ArrayElementAsRef<int>(itemPositionArrayIndexPointer,
                                 item.Type - EntityType.A);
                         int index = Interlocked.Increment(ref instanceIndexRef);
+                        // Debug.Log(String.Format("Inc {0} to {1}", item.Type - EntityType.A, index));
                         _renderedItemPositionsPointer[item.Type - EntityType.A][index] = computePosition;
                     }
                 }

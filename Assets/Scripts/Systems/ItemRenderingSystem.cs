@@ -35,8 +35,12 @@ namespace Automation
             for (var index = 0; index < renderedItemCount.Length; index++)
             {
                 var nativeArray = renderedItemCount[index];
-                if(nativeArray.Length == 0)
+                if (nativeArray.Length == 0)
+                {
+                    // Debug.Log("Skip " + (EntityType.A + (byte) index));
                     continue;
+                }
+                // Debug.Log($"Draw {nativeArray.Length} {(EntityType.A + (byte) index)} {nativeArray[0]}");
                 if (_bufferWithArgs[index] == null || _bufferWithArgs[index].count != nativeArray.Length)
                 {
                     _bufferWithArgs[index]?.Dispose();
