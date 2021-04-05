@@ -112,11 +112,6 @@ namespace Automation
             }
         }
 
-        protected override void OnCreate()
-        {
-            // _simulationChunksFirstSegment = new NativeArray<Entity>(1, Allocator.Persistent);
-        }
-
         protected override void OnDestroy()
         {
             _simulationChunksFirstSegment.Dispose();

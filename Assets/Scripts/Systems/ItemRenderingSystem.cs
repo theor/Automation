@@ -8,35 +8,50 @@ namespace Automation
     class ItemRenderingSystem : SystemBase
     {
         private RenderedItemPositionComputationSystem _irss;
-        private GraphicsBuffer _bufferWithArgs;
+        private GraphicsBuffer[] _bufferWithArgs;
 
         protected override void OnCreate()
         {
             base.OnCreate();
             _irss = World.GetExistingSystem<RenderedItemPositionComputationSystem>();
+            _bufferWithArgs = new GraphicsBuffer[2];
         }
 
         protected override void OnDestroy()
         {
-            _bufferWithArgs?.Dispose();
+            for (int i = 0; i < _bufferWithArgs.Length; i++)
+            {
+                _bufferWithArgs[i]?.Dispose();
+            }
         }
 
         protected override void OnUpdate()
         {
-            if (_irss.RenderedItemCount == 0)
-                return;
+            var renderedItemCount = _irss.RenderedItemPositions;
             _irss.SetupDependency.Complete();
+
             var prefabs = GetSingleton<World.Prefabs>();
-            var m = EntityManager.GetSharedComponentData<Unity.Rendering.RenderMesh>(prefabs.ItemPrefab);
-            if (_bufferWithArgs == null || _bufferWithArgs.count != _irss.RenderedItemCount)
+            
+            for (var index = 0; index < renderedItemCount.Length; index++)
             {
-                _bufferWithArgs?.Dispose();
-                _bufferWithArgs = new GraphicsBuffer( GraphicsBuffer.Target.Structured, _irss.RenderedItemCount, 12);
+                var nativeArray = renderedItemCount[index];
+                if(nativeArray.Length == 0)
+                    continue;
+                if (_bufferWithArgs[index] == null || _bufferWithArgs[index].count != nativeArray.Length)
+                {
+                    _bufferWithArgs[index]?.Dispose();
+                    _bufferWithArgs[index] = new GraphicsBuffer( GraphicsBuffer.Target.Structured, nativeArray.Length, 12);
+                }
+                _bufferWithArgs[index].SetData(nativeArray);
+                var materialPropertyBlock = new MaterialPropertyBlock();
+                materialPropertyBlock.SetBuffer("_AllInstancesTransformBuffer", _bufferWithArgs[index]);
+
+                var m = EntityManager.GetSharedComponentData<Unity.Rendering.RenderMesh>(
+                    index == 0 ? prefabs.ItemPrefab : prefabs.Item2Prefab); 
+
+                Graphics.DrawMeshInstancedProcedural(m.mesh, 0, m.material, new Bounds(Vector3.zero, Vector3.one*10000),nativeArray.Length, materialPropertyBlock);
             }
-            _bufferWithArgs.SetData(_irss.RenderedItemPositions);
-            var materialPropertyBlock = new MaterialPropertyBlock();
-            materialPropertyBlock.SetBuffer("_AllInstancesTransformBuffer", _bufferWithArgs);
-            Graphics.DrawMeshInstancedProcedural(m.mesh, 0, m.material, new Bounds(Vector3.zero, Vector3.one*10000),_irss.RenderedItemCount, materialPropertyBlock);
+           
         }
     }
 }

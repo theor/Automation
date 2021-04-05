@@ -55,8 +55,8 @@ namespace Automation
                 Item2Prefab = item2Entity,
             });
             var entities =
-                // MakeSplitter(dstManager, prefabEntity, spltterPrefab,10);
-                MakeSplitter(dstManager, prefabEntity, spltterPrefab,100000);
+                MakeSplitter(dstManager, prefabEntity, spltterPrefab,10);
+                // MakeSplitter(dstManager, prefabEntity, spltterPrefab,100000);
                 // Make3BeltsU(dstManager, prefabEntity, 2, 2);
                 // Make3BeltsU(dstManager, prefabEntity, 100, 10000);
             // MakeT(dstManager, prefabEntity);
@@ -104,13 +104,13 @@ namespace Automation
                     (EntityType.A, 1)
                     , (EntityType.A, 1)
                     , (EntityType.A, 1)
+                    , (EntityType.B, 1)
                     , (EntityType.A, 1)
                     , (EntityType.A, 1)
+                    , (EntityType.B, 1)
                     , (EntityType.A, 1)
                     , (EntityType.A, 1)
-                    , (EntityType.A, 1)
-                    , (EntityType.A, 1)
-                    , (EntityType.A, 1)
+                    , (EntityType.B, 1)
                     , (EntityType.A, 1)
                     , (EntityType.A, 1)
                     , (EntityType.A, 1)

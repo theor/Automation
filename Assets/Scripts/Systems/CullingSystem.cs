@@ -20,7 +20,7 @@ namespace Automation
         {
             _corners = new Vector3[4];
             planes = new NativeArray<float4>(6, Allocator.Persistent);
-            RenderedItemCount = new NativeArray<int>(1, Allocator.Persistent);
+            RenderedItemCount = new NativeArray<int>(2, Allocator.Persistent);
         }
 
         protected override void OnDestroy()
@@ -32,7 +32,9 @@ namespace Automation
 
         protected override unsafe void OnUpdate()
         {
-            RenderedItemCount[0] = 0;
+            for (var index = 0; index < RenderedItemCount.Length; index++)
+                RenderedItemCount[index] = 0;
+
             var countPtr = (int*)RenderedItemCount.GetUnsafePtr();
             var camera = Camera.main;
             var camPos = camera.transform.position;
@@ -49,8 +51,16 @@ namespace Automation
                 {
                     var sAABB = s.AABB;
                     s.Rendered = FrustumPlanes.Intersect(cullingPlanes, sAABB) != FrustumPlanes.IntersectResult.Out;
-                    if(s.Rendered)
-                        Interlocked.Add(ref UnsafeUtility.AsRef<int>(countPtr), items.Length);
+                    if (s.Rendered)
+                    {
+                        
+                        int* counts = stackalloc int[2];
+                        for (int i = 0; i < items.Length; i++)
+                            counts[items[i].Type - EntityType.A]++;
+
+                        for (int i = 0; i < 2; i++)
+                            Interlocked.Add(ref UnsafeUtility.ArrayElementAsRef<int>(countPtr, i), counts[i]);
+                    }
                     // Color c = FrustumPlanes.Intersect(cullingPlanes, sAABB) switch
                     // {
                     //     FrustumPlanes.IntersectResult.Out => Color.black,
@@ -70,11 +80,16 @@ namespace Automation
                 s.Rendered = FrustumPlanes.Intersect(cullingPlanes, sAABB) != FrustumPlanes.IntersectResult.Out;
                 if (s.Rendered)
                 {
-                    int items = s.Input.Type != EntityType.None ? 1 : 0;
-                    items += s.Output1.Type != EntityType.None ? 1 : 0;
-                    items += s.Output2.Type != EntityType.None ? 1 : 0;
+                    int* counts = stackalloc int[2];
 
-                    Interlocked.Add(ref UnsafeUtility.AsRef<int>(countPtr2), items);
+                    if (s.Input.Type != EntityType.None)
+                        counts[s.Input.Type - EntityType.A]++;
+                    if (s.Output1.Type != EntityType.None)
+                        counts[s.Output1.Type - EntityType.A]++;
+                    if (s.Output2.Type != EntityType.None)
+                        counts[s.Output2.Type - EntityType.A]++;
+                    for (int i = 0; i < 2; i++)
+                        Interlocked.Add(ref UnsafeUtility.ArrayElementAsRef<int>(countPtr2, i), counts[i]);
                 }
             })
                 .WithNativeDisableUnsafePtrRestriction(countPtr2)
