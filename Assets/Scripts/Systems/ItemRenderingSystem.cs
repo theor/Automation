@@ -27,8 +27,8 @@ namespace Automation
 
         protected override void OnUpdate()
         {
-            var renderedItemCount = _irss.RenderedItemPositions;
             _irss.SetupDependency.Complete();
+            var renderedItemCount = _irss.RenderedItemPositions;
 
             var prefabs = GetSingleton<World.Prefabs>();
             
