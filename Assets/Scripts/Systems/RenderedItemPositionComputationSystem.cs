@@ -49,6 +49,9 @@ namespace Automation
         {
             if(!_cullingSystem.RenderedItemCount.IsCreated)
                 return;
+            if(!SetupDependency.IsCompleted)
+                throw new NotImplementedException();
+            _cullingSystem.CountDependency.Complete();
             int total = 0;
             for (var index = 0; index < _cullingSystem.RenderedItemCount.Length; index++)
                 total += _cullingSystem.RenderedItemCount[index];

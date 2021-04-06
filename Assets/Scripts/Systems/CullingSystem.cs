@@ -3,6 +3,7 @@ using System.Threading;
 using Unity.Collections;
 using Unity.Collections.LowLevel.Unsafe;
 using Unity.Entities;
+using Unity.Jobs;
 using Unity.Mathematics;
 using UnityEngine;
 using FrustumPlanes = Unity.Rendering.FrustumPlanes;
@@ -15,12 +16,15 @@ namespace Automation
     {
         private Vector3[] _corners;
         private NativeArray<float4> planes;
+        private RenderedItemPositionComputationSystem _renderedItemPositionComputationSystem;
 
         public NativeArray<int> RenderedItemCount;
+        public JobHandle CountDependency;
         protected override void OnCreate()
         {
             _corners = new Vector3[4];
             planes = new NativeArray<float4>(6, Allocator.Persistent);
+            _renderedItemPositionComputationSystem = World.GetExistingSystem<RenderedItemPositionComputationSystem>();
         }
 
         protected override void OnDestroy()
@@ -33,6 +37,7 @@ namespace Automation
 
         protected override unsafe void OnUpdate()
         {
+            _renderedItemPositionComputationSystem.SetupDependency.Complete();
             if(!RenderedItemCount.IsCreated)
                 RenderedItemCount = new NativeArray<int>(2, Allocator.Persistent);
             else
@@ -84,7 +89,7 @@ namespace Automation
                 .WithNativeDisableParallelForRestriction(cullingPlanes)
                 .ScheduleParallel(Dependency);
             var countPtr2 = (int*)RenderedItemCount.GetUnsafePtr();
-            Dependency = Entities.ForEach((ref BeltSplitter s) =>
+             CountDependency = Dependency = Entities.ForEach((ref BeltSplitter s) =>
             {
                 var sAABB = s.AABB;
                 s.Rendered = FrustumPlanes.Intersect(cullingPlanes, sAABB) != FrustumPlanes.IntersectResult.Out;
