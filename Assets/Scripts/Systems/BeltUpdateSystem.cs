@@ -8,6 +8,7 @@ using UnityEngine;
 
 namespace Automation
 {
+    [UpdateInGroup(typeof(FixedStepSimulationSystemGroup))]
     class BeltUpdateSystem : SystemBase
     {
         private NativeArray<Entity> _simulationChunksFirstSegment;

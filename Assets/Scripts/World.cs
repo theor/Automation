@@ -51,9 +51,9 @@ namespace Automation
             });
             var entities =
                 // MakeSplitter(dstManager, prefabEntity, spltterPrefab,10);
-                // MakeSplitter(dstManager, prefabEntity, spltterPrefab,10000);
+                MakeSplitter(dstManager, prefabEntity, spltterPrefab,200_000);
                 // Make3BeltsU(dstManager, prefabEntity, 2, 2);
-                Make3BeltsU(dstManager, prefabEntity, 100, 10000);
+                // Make3BeltsU(dstManager, prefabEntity, 100, 10000);
             // MakeT(dstManager, prefabEntity);
                 // MakeT2(dstManager, prefabEntity);
 

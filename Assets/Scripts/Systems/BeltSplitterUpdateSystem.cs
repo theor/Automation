@@ -4,6 +4,7 @@ namespace Automation
 {
 
     [UpdateAfter(typeof(BeltUpdateSystem))]
+    [UpdateInGroup(typeof(FixedStepSimulationSystemGroup))]
     class BeltSplitterUpdateSystem : SystemBase
     {
         protected override void OnUpdate()

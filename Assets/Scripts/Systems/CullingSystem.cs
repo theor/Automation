@@ -10,8 +10,6 @@ using FrustumPlanes = Unity.Rendering.FrustumPlanes;
 
 namespace Automation
 {
-    // [UpdateInGroup(typeof(PresentationSystemGroup))]
-    [UpdateAfter(typeof(BeltSplitterUpdateSystem))]
     class CullingSystem : SystemBase
     {
         private Vector3[] _corners;
