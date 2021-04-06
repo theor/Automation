@@ -1,12 +1,9 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using Unity.Burst;
 using Unity.Collections;
 using Unity.Entities;
-using Unity.Jobs;
 using Unity.Mathematics;
-using Unity.Rendering;
 using Unity.Transforms;
 using UnityEngine;
 
@@ -46,8 +43,6 @@ namespace Automation
             var spltterPrefab = conversionSystem.GetPrimaryEntity(SplitterPrefab);
             var itemEntity = conversionSystem.GetPrimaryEntity(ItemPrefab);
             var item2Entity = conversionSystem.GetPrimaryEntity(Item2Prefab);
-            // dstManager.AddComponent<BeltItemVisual>(itemEntity);
-            // dstManager.AddComponent<BeltItemVisual>(item2Entity);
             dstManager.AddComponentData(entity, new Prefabs
             {
                 BeltPrefab = prefabEntity,
@@ -56,33 +51,11 @@ namespace Automation
             });
             var entities =
                 // MakeSplitter(dstManager, prefabEntity, spltterPrefab,10);
-                MakeSplitter(dstManager, prefabEntity, spltterPrefab,100);
+                // MakeSplitter(dstManager, prefabEntity, spltterPrefab,10000);
                 // Make3BeltsU(dstManager, prefabEntity, 2, 2);
-                // Make3BeltsU(dstManager, prefabEntity, 100, 10000);
+                Make3BeltsU(dstManager, prefabEntity, 100, 10000);
             // MakeT(dstManager, prefabEntity);
                 // MakeT2(dstManager, prefabEntity);
-            // for (var index = 0; index < entities.Length; index++)
-            // {
-            //     var e = entities[index];
-            //     if (dstManager.HasComponent<BeltSegment>(e))
-            //     {
-            //         var segment = dstManager.GetComponentData<BeltSegment>(e);
-            //         var dynamicBuffer = dstManager.GetBuffer<BeltItem>(e);
-            //         segment.ComputeInsertionPoint(ref dynamicBuffer, (ushort) SubdivCount);
-            //         dstManager.SetComponentData(e, segment);
-            //
-            //         var next = segment.Next;
-            //         if (next != Entity.Null)
-            //         {
-            //             if (dstManager.HasComponent<BeltSegment>(next))
-            //             {
-            //                 var nextBeltSegment = dstManager.GetComponentData<BeltSegment>(next);
-            //                 nextBeltSegment.Prev = e;
-            //                 dstManager.SetComponentData(next, nextBeltSegment);
-            //             }
-            //         }
-            //     }
-            // }
 
             entities.Dispose();
         }

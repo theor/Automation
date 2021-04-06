@@ -63,27 +63,14 @@ namespace Automation
                     if (s.Rendered)
                     {
                         int* counts = stackalloc int[2];
-                        for (int i = 0; i < 2; i++) counts[i] = 0;
+                        UnsafeUtility.MemClear(counts, UnsafeUtility.SizeOf<int>() * 2);
                         
                         for (int i = 0; i < items.Length; i++)
                             counts[items[i].Type - EntityType.A]++;
 
                         for (int i = 0; i < 2; i++)
-                        {
-                            // var prev = countPtr[i];
-                            // var newCount =
-                                Interlocked.Add(ref UnsafeUtility.ArrayElementAsRef<int>(countPtr, i), counts[i]);
-                            // Debug.Log(String.Format("New count {0}: {1} + {3} => {2}", i, prev, newCount, counts[i]));
-                        }
+                            Interlocked.Add(ref UnsafeUtility.ArrayElementAsRef<int>(countPtr, i), counts[i]);
                     }
-                    // Color c = FrustumPlanes.Intersect(cullingPlanes, sAABB) switch
-                    // {
-                    //     FrustumPlanes.IntersectResult.Out => Color.black,
-                    //     FrustumPlanes.IntersectResult.In => Color.white,
-                    //     FrustumPlanes.IntersectResult.Partial => Color.cyan,
-                    // };
-                    // Debug.DrawLine(sAABB.Min, sAABB.Max, c);
-                    // Debug.DrawLine(FromI2(s.Start, 1), FromI2(s.End, 1), c);
                 })
                 .WithNativeDisableUnsafePtrRestriction(countPtr)
                 .WithNativeDisableParallelForRestriction(cullingPlanes)
@@ -96,8 +83,8 @@ namespace Automation
                 if (s.Rendered)
                 {
                     int* counts = stackalloc int[2];
-                    for (int i = 0; i < 2; i++)
-                        counts[i] = 0;
+                    UnsafeUtility.MemClear(counts, UnsafeUtility.SizeOf<int>() * 2);
+
                     if (s.Input.Type != EntityType.None)
                         counts[s.Input.Type - EntityType.A]++;
                     if (s.Output1.Type != EntityType.None)

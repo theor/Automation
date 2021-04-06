@@ -1,5 +1,6 @@
 using System;
 using System.Threading;
+using Unity.Burst;
 using Unity.Collections;
 using Unity.Collections.LowLevel.Unsafe;
 using Unity.Entities;
@@ -87,49 +88,18 @@ namespace Automation
                 _renderedItemPositionsPointer = _renderedItemPositionsPointer,
                 itemPositionArrayIndexPointer = itemPositionArrayIndexPointer,
             }.ScheduleParallel(_segmentQuery, Dependency);
-                // Entities.ForEach((DynamicBuffer<BeltItem> items, in BeltSegment segment) =>
-                // {
-                //     if(!segment.Rendered)
-                //         return;
-                //     float dist = 0;
-                //     int2 dropPoint = segment.DropPoint;
-                //     int2 revDir = segment.RevDir;
-                //     for (int i = 0; i < items.Length; i++)
-                //     {
-                //         ref BeltItem item = ref items.ElementAt(i);
-                //         dist += item.Distance / (float) settings.BeltDistanceSubDiv;
-                //         float3 computePosition = new float3(dropPoint.x + dist * revDir.x, 0, dropPoint.y + dist * revDir.y);
-                //         ref int instanceIndexRef = ref UnsafeUtility.ArrayElementAsRef<int>(itemPositionArrayIndexPointer, item.Type - EntityType.A);
-                //         int index = Interlocked.Increment(ref instanceIndexRef);
-                //         _renderedItemPositionsPointer[i][index] = computePosition;
-                //     }
-                // })
-                // .WithNativeDisableUnsafePtrRestriction<float3*>(_renderedItemPositionsPointer)
-                // .WithNativeDisableUnsafePtrRestriction(itemPositionArrayIndexPointer)
-                // .ScheduleParallel(Dependency);
-                SetupDependency = Dependency = new ComputeSplitterItemPositions
-                {
-                    Settings = settings,
-                    BeltSplittersHandle = GetComponentTypeHandle<BeltSplitter>(),
-                    _renderedItemPositionsPointer = _renderedItemPositionsPointer,
-                    itemPositionArrayIndexPointer = itemPositionArrayIndexPointer,
-                }.ScheduleParallel(_splitterQuery, Dependency);
-                // Entities.ForEach((in BeltSplitter splitter) =>
-                //     {
-                //         if(!splitter.Rendered)
-                //             return;
-                //         ref int instanceIndexRef = ref UnsafeUtility.AsRef<int>(itemPositionArrayIndexPointer);
-                //         var revDir = splitter.RevDir;
-                //         ProcessSplitterItem(splitter.Input, splitter, settings, revDir, ref instanceIndexRef, renderedItemCount, _renderedItemPositionsPointer);
-                //         ProcessSplitterItem(splitter.Output1, splitter, settings, revDir, ref instanceIndexRef, renderedItemCount, _renderedItemPositionsPointer);
-                //         ProcessSplitterItem(splitter.Output2, splitter, settings, revDir, ref instanceIndexRef, renderedItemCount, _renderedItemPositionsPointer, 1);
-                //     })
-                //     .WithNativeDisableUnsafePtrRestriction(_renderedItemPositionsPointer)
-                //     .WithNativeDisableUnsafePtrRestriction(itemPositionArrayIndexPointer)
-                //     .ScheduleParallel(Dependency);
+            Dependency = new ComputeSplitterItemPositions
+            {
+                Settings = settings,
+                BeltSplittersHandle = GetComponentTypeHandle<BeltSplitter>(),
+                _renderedItemPositionsPointer = _renderedItemPositionsPointer,
+                itemPositionArrayIndexPointer = itemPositionArrayIndexPointer,
+            }.ScheduleParallel(_splitterQuery, Dependency);
+            SetupDependency = Dependency;
         }
 
-        internal struct ComputeSplitterItemPositions : IJobChunk
+        [BurstCompile]
+        struct ComputeSplitterItemPositions : IJobChunk
         {
             public ComponentTypeHandle<BeltSplitter> BeltSplittersHandle;
             public World.Settings Settings;
@@ -147,9 +117,6 @@ namespace Automation
                     var splitter = splitters[chunkIdx];
                     if(!splitter.Rendered)
                         continue;
-                    // ref int instanceIndexRef =
-                    //     ref UnsafeUtility.ArrayElementAsRef<int>(itemPositionArrayIndexPointer,
-                    //         item.Type - EntityType.A);
                     var revDir = splitter.RevDir;
                     ProcessSplitterItem(splitter.Input, splitter, Settings, revDir);
                     ProcessSplitterItem(splitter.Output1, splitter, Settings, revDir);
@@ -177,15 +144,14 @@ namespace Automation
             }
         }
 
-        internal struct ComputePositionsJob : IJobChunk
+        [BurstCompile]
+        struct ComputePositionsJob : IJobChunk
         {
             public World.Settings Settings;
             [ReadOnly]
             public ComponentTypeHandle<BeltSegment> BeltSegmentsHandle;
             [ReadOnly]
             public BufferTypeHandle<BeltItem> BeltItemsHandle;
-            // [ReadOnly]
-            // public EntityTypeHandle EntityHandle;
             [NativeDisableUnsafePtrRestriction]
             public unsafe float3** _renderedItemPositionsPointer;
 
@@ -194,7 +160,6 @@ namespace Automation
 
             public unsafe void Execute(ArchetypeChunk chunk, int chunkIndex, int firstEntityIndex)
             {
-                // var entities = chunk.GetNativeArray(EntityHandle);
                 var segments = chunk.GetNativeArray(BeltSegmentsHandle);
                 var allItems = chunk.GetBufferAccessor(BeltItemsHandle);
                 for (int chunkIdx = 0; chunkIdx != chunk.Count; chunkIdx++)

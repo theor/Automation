@@ -14,7 +14,7 @@ namespace Automation
         private EntityQueryMask _hasBeltSegmentMask, _hasBeltSplitterMask;
 
         [BurstCompile]
-        struct BeltUpdateJob : IJobParallelFor
+        struct BeltUpdateJob : IJobFor
         {
             public NativeArray<Entity> SimulationChunksFirstSegment;
 
@@ -165,7 +165,7 @@ namespace Automation
                 SimulationChunksFirstSegment = _simulationChunksFirstSegment,
             }
                     // .Run(_simulationChunksFirstSegment.Length);
-                .Schedule(_simulationChunksFirstSegment.Length, 1, Dependency);
+                .ScheduleParallel(_simulationChunksFirstSegment.Length, 1, Dependency);
 
 
             // Debug draw
