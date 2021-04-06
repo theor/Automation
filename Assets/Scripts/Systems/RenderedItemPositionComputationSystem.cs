@@ -13,10 +13,9 @@ namespace Automation
     [UpdateAfter(typeof(CullingSystem))]
     class RenderedItemPositionComputationSystem : SystemBase
     {
-
         public NativeArray<float3>[] RenderedItemPositions;
         public JobHandle SetupDependency;
-        private NativeArray<int> _itemPositionArrayIndex;
+        private NativeList<int> _itemPositionArrayIndex;
         private CullingSystem _cullingSystem;
         private unsafe float3** _renderedItemPositionsPointer;
         private EntityQuery _segmentQuery;
@@ -25,7 +24,9 @@ namespace Automation
         protected override unsafe void OnCreate()
         {
             _cullingSystem = World.GetExistingSystem<CullingSystem>();
-            _itemPositionArrayIndex = new NativeArray<int>(2, Allocator.Persistent);
+            _itemPositionArrayIndex = new NativeList<int>(2, Allocator.Persistent);
+            _itemPositionArrayIndex.Add(-1);
+            _itemPositionArrayIndex.Add(-1);
             RenderedItemPositions = new NativeArray<float3>[2];
             _renderedItemPositionsPointer = (float3**) UnsafeUtility.Malloc(UnsafeUtility.SizeOf<IntPtr>() * 2, UnsafeUtility.AlignOf<IntPtr>(), Allocator.Persistent);
             _segmentQuery = GetEntityQuery(ComponentType.ReadOnly<BeltSegment>(), ComponentType.ReadOnly<BeltItem>());
@@ -76,7 +77,6 @@ namespace Automation
             };
             _itemPositionArrayIndex[0] = -1;
             _itemPositionArrayIndex[1] = -1;
-            int* itemPositionArrayIndexPointer = (int*)_itemPositionArrayIndex.GetUnsafePtr();
 
             World.Settings settings = GetSingleton<World.Settings>();
             Dependency = new ComputePositionsJob
@@ -86,14 +86,14 @@ namespace Automation
                 BeltItemsHandle = GetBufferTypeHandle<BeltItem>(),
                 BeltSegmentsHandle = GetComponentTypeHandle<BeltSegment>(),
                 _renderedItemPositionsPointer = _renderedItemPositionsPointer,
-                itemPositionArrayIndexPointer = itemPositionArrayIndexPointer,
+                itemPositionArrayIndexPointer = _itemPositionArrayIndex,
             }.ScheduleParallel(_segmentQuery, Dependency);
             Dependency = new ComputeSplitterItemPositions
             {
                 Settings = settings,
                 BeltSplittersHandle = GetComponentTypeHandle<BeltSplitter>(),
                 _renderedItemPositionsPointer = _renderedItemPositionsPointer,
-                itemPositionArrayIndexPointer = itemPositionArrayIndexPointer,
+                itemPositionArrayIndexPointer = _itemPositionArrayIndex,
             }.ScheduleParallel(_splitterQuery, Dependency);
             SetupDependency = Dependency;
         }
@@ -106,8 +106,8 @@ namespace Automation
             [NativeDisableUnsafePtrRestriction]
             public unsafe float3** _renderedItemPositionsPointer;
 
-            [NativeDisableUnsafePtrRestriction]
-            public unsafe int* itemPositionArrayIndexPointer;
+            [NativeDisableContainerSafetyRestriction]
+            public NativeList<int> itemPositionArrayIndexPointer;
 
             public void Execute(ArchetypeChunk chunk, int chunkIndex, int firstEntityIndex)
             {
@@ -132,15 +132,14 @@ namespace Automation
             {
                 if (item.Type == EntityType.None)
                     return;
-                
-                ref int instanceIndexRef =
-                    ref UnsafeUtility.ArrayElementAsRef<int>(itemPositionArrayIndexPointer,
-                        item.Type - EntityType.A);
+
+                var itemTypeIndex = item.Type - EntityType.A;
+                ref int instanceIndexRef = ref itemPositionArrayIndexPointer.ElementAt(itemTypeIndex);
                 var dist = item.Distance / (float) settings.BeltDistanceSubDiv;
                 var cross = -new int2(-revDir.y, revDir.x) * zOffset;
                 float3 computePosition = new float3(splitter.End.x + dist * revDir.x + cross.x, 0, splitter.End.y + dist * revDir.y + cross.y);
                 int index = Interlocked.Increment(ref instanceIndexRef);
-                _renderedItemPositionsPointer[item.Type - EntityType.A][index] = computePosition;
+                _renderedItemPositionsPointer[itemTypeIndex][index] = computePosition;
             }
         }
 
@@ -154,9 +153,9 @@ namespace Automation
             public BufferTypeHandle<BeltItem> BeltItemsHandle;
             [NativeDisableUnsafePtrRestriction]
             public unsafe float3** _renderedItemPositionsPointer;
-
-            [NativeDisableUnsafePtrRestriction]
-            public unsafe int* itemPositionArrayIndexPointer;
+            
+            [NativeDisableContainerSafetyRestriction]
+            public NativeList<int> itemPositionArrayIndexPointer;
 
             public unsafe void Execute(ArchetypeChunk chunk, int chunkIndex, int firstEntityIndex)
             {
@@ -181,15 +180,13 @@ namespace Automation
                         dist += item.Distance / (float) Settings.BeltDistanceSubDiv;
                         float3 computePosition =
                             new float3(dropPoint.x + dist * revDir.x, 0, dropPoint.y + dist * revDir.y);
-                        ref int instanceIndexRef =
-                            ref UnsafeUtility.ArrayElementAsRef<int>(itemPositionArrayIndexPointer,
-                                item.Type - EntityType.A);
+                        var itemTypeIndex = item.Type - EntityType.A;
+                        ref int instanceIndexRef = ref itemPositionArrayIndexPointer.ElementAt(itemTypeIndex);
                         int index = Interlocked.Increment(ref instanceIndexRef);
                         // Debug.Log(String.Format("Inc {0} to {1}", item.Type - EntityType.A, index));
-                        _renderedItemPositionsPointer[item.Type - EntityType.A][index] = computePosition;
+                        _renderedItemPositionsPointer[itemTypeIndex][index] = computePosition;
                     }
                 }
-
             }
         }
     }

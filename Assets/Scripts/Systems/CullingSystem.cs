@@ -15,7 +15,7 @@ namespace Automation
     class CullingSystem : SystemBase
     {
         private Vector3[] _corners;
-        private NativeArray<float4> planes;
+        private NativeArray<float4> _cameraPlanes;
         private RenderedItemPositionComputationSystem _renderedItemPositionComputationSystem;
 
         public NativeArray<int> RenderedItemCount;
@@ -23,13 +23,13 @@ namespace Automation
         protected override void OnCreate()
         {
             _corners = new Vector3[4];
-            planes = new NativeArray<float4>(6, Allocator.Persistent);
+            _cameraPlanes = new NativeArray<float4>(6, Allocator.Persistent);
             _renderedItemPositionComputationSystem = World.GetExistingSystem<RenderedItemPositionComputationSystem>();
         }
 
         protected override void OnDestroy()
         {
-            planes.Dispose();
+            _cameraPlanes.Dispose();
             if(RenderedItemCount.IsCreated)
                 RenderedItemCount.Dispose();
         }
@@ -54,7 +54,7 @@ namespace Automation
                 Debug.DrawRay(camPos, worldSpaceCorner, Color.blue);
             }
 
-            var cullingPlanes = planes;
+            var cullingPlanes = _cameraPlanes;
             FrustumPlanes.FromCamera(camera, cullingPlanes);
             Dependency = Entities.ForEach((DynamicBuffer<BeltItem> items, ref BeltSegment s) =>
                 {
@@ -92,22 +92,12 @@ namespace Automation
                     if (s.Output2.Type != EntityType.None)
                         counts[s.Output2.Type - EntityType.A]++;
                     for (int i = 0; i < 2; i++)
-                    {
-                        // var newCount =
-                            Interlocked.Add(ref UnsafeUtility.ArrayElementAsRef<int>(countPtr2, i), counts[i]);
-                        // Debug.Log(String.Format("New count {0} = {1}", i, newCount));
-                    }
+                        Interlocked.Add(ref UnsafeUtility.ArrayElementAsRef<int>(countPtr2, i), counts[i]);
                 }
             })
                 .WithNativeDisableUnsafePtrRestriction(countPtr2)
                 .WithNativeDisableParallelForRestriction(cullingPlanes)
                 .ScheduleParallel(Dependency);
-            // Dependency.Complete();
-            // for (var index = 0; index < RenderedItemCount.Length; index++)
-            // {
-            //     var i = RenderedItemCount[index];
-            //     Debug.Log($"RenderedItemCount {index} = {i}");
-            // }
         }
     }
 }

@@ -7,28 +7,26 @@ namespace Automation
     [UpdateInGroup(typeof(PresentationSystemGroup))]
     class ItemRenderingSystem : SystemBase
     {
-        private RenderedItemPositionComputationSystem _irss;
+        private RenderedItemPositionComputationSystem _renderedItemPositionComputationSystem;
         private GraphicsBuffer[] _bufferWithArgs;
 
         protected override void OnCreate()
         {
             base.OnCreate();
-            _irss = World.GetExistingSystem<RenderedItemPositionComputationSystem>();
+            _renderedItemPositionComputationSystem = World.GetExistingSystem<RenderedItemPositionComputationSystem>();
             _bufferWithArgs = new GraphicsBuffer[2];
         }
 
         protected override void OnDestroy()
         {
             for (int i = 0; i < _bufferWithArgs.Length; i++)
-            {
                 _bufferWithArgs[i]?.Dispose();
-            }
         }
 
         protected override void OnUpdate()
         {
-            _irss.SetupDependency.Complete();
-            var renderedItemCount = _irss.RenderedItemPositions;
+            _renderedItemPositionComputationSystem.SetupDependency.Complete();
+            var renderedItemCount = _renderedItemPositionComputationSystem.RenderedItemPositions;
 
             var prefabs = GetSingleton<World.Prefabs>();
             
