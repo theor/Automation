@@ -13,17 +13,17 @@ namespace Automation
             var items = GetBufferFromEntity<BeltItem>();
             Entities.ForEach((Entity e, ref BeltSplitter s) =>
                 {
-                    if (s.Input.Type != EntityType.None)
+                    if (s.Input.Type != ItemType.None)
                     {
                         BeltItem i = s.UseOutput2 ? s.Output2 : s.Output1;
-                        if (i.Type == EntityType.None)
+                        if (i.Type == ItemType.None)
                         {
                             // move it straight to output
                             if (s.UseOutput2)
                                 s.Output2 = s.Input;
                             else
                                 s.Output1 = s.Input;
-                            s.Input.Type = EntityType.None;
+                            s.Input.Type = ItemType.None;
                             s.UseOutput2 = !s.UseOutput2;
                         }
                     }
@@ -40,7 +40,7 @@ namespace Automation
         private static void ProcessOutput(ref ComponentDataFromEntity<BeltSegment> segments,
             ref BufferFromEntity<BeltItem> items, ref BeltItem sOutput1, Entity enext)
         {
-            if (sOutput1.Type != EntityType.None)
+            if (sOutput1.Type != ItemType.None)
             {
                 var next = segments[enext];
                 if (next.DistanceToInsertAtStart == 0) // full
@@ -52,7 +52,7 @@ namespace Automation
                 }
 
                 if (BeltUpdateSystem.InsertInSegment(ref items, ref segments, sOutput1, enext))
-                    sOutput1.Type = EntityType.None;
+                    sOutput1.Type = ItemType.None;
             }
         }
     }

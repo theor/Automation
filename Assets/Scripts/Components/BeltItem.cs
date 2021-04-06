@@ -4,10 +4,10 @@ namespace Automation
 {
     struct BeltItem : IBufferElementData
     {
-        public EntityType Type;
+        public ItemType Type;
         public ushort Distance;
 
-        public BeltItem(EntityType type, ushort distance)
+        public BeltItem(ItemType type, ushort distance)
         {
             Type = type;
             Distance = distance;

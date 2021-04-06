@@ -130,10 +130,10 @@ namespace Automation
                 int2 revDir, 
                 int zOffset = 0)
             {
-                if (item.Type == EntityType.None)
+                if (item.Type == ItemType.None)
                     return;
 
-                var itemTypeIndex = item.Type - EntityType.A;
+                var itemTypeIndex = item.Type - ItemType.PaintBucket;
                 ref int instanceIndexRef = ref itemPositionArrayIndexPointer.ElementAt(itemTypeIndex);
                 var dist = item.Distance / (float) settings.BeltDistanceSubDiv;
                 var cross = -new int2(-revDir.y, revDir.x) * zOffset;
@@ -180,7 +180,7 @@ namespace Automation
                         dist += item.Distance / (float) Settings.BeltDistanceSubDiv;
                         float3 computePosition =
                             new float3(dropPoint.x + dist * revDir.x, 0, dropPoint.y + dist * revDir.y);
-                        var itemTypeIndex = item.Type - EntityType.A;
+                        var itemTypeIndex = item.Type - ItemType.PaintBucket;
                         ref int instanceIndexRef = ref itemPositionArrayIndexPointer.ElementAt(itemTypeIndex);
                         int index = Interlocked.Increment(ref instanceIndexRef);
                         // Debug.Log(String.Format("Inc {0} to {1}", item.Type - EntityType.A, index));

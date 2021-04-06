@@ -51,9 +51,9 @@ namespace Automation
             });
             var entities =
                 // MakeSplitter(dstManager, prefabEntity, spltterPrefab,10);
-                MakeSplitter(dstManager, prefabEntity, spltterPrefab,200_000);
+                MakeSplitter(dstManager, prefabEntity, spltterPrefab,100_000);
                 // Make3BeltsU(dstManager, prefabEntity, 2, 2);
-                // Make3BeltsU(dstManager, prefabEntity, 100, 10000);
+                // Make3BeltsU(dstManager, prefabEntity, 100, 100000);
             // MakeT(dstManager, prefabEntity);
                 // MakeT2(dstManager, prefabEntity);
 
@@ -74,19 +74,19 @@ namespace Automation
                 // incoming
                 CreateSegment(dstManager, entities[3*i],
                     new BeltSegment(new int2(0, 4*i), new int2(5, 4*i), spltterEntities[i]),
-                    (EntityType.A, 1)
-                    , (EntityType.A, 1)
-                    , (EntityType.A, 1)
-                    , (EntityType.B, 1)
-                    , (EntityType.A, 1)
-                    , (EntityType.A, 1)
-                    , (EntityType.B, 1)
-                    , (EntityType.A, 1)
-                    , (EntityType.A, 1)
-                    , (EntityType.B, 1)
-                    , (EntityType.A, 1)
-                    , (EntityType.A, 1)
-                    , (EntityType.A, 1)
+                    (ItemType.PaintBucket, 1)
+                    , (ItemType.PaintBucket, 1)
+                    , (ItemType.PaintBucket, 1)
+                    , (ItemType.HardHat, 1)
+                    , (ItemType.PaintBucket, 1)
+                    , (ItemType.PaintBucket, 1)
+                    , (ItemType.HardHat, 1)
+                    , (ItemType.PaintBucket, 1)
+                    , (ItemType.PaintBucket, 1)
+                    , (ItemType.HardHat, 1)
+                    , (ItemType.PaintBucket, 1)
+                    , (ItemType.PaintBucket, 1)
+                    , (ItemType.PaintBucket, 1)
                     );
                 // outcoming
                 CreateSegment(dstManager, entities[3*i+1],
@@ -101,9 +101,9 @@ namespace Automation
         {
             var entities = dstManager.Instantiate(prefabEntity, 2, Allocator.Temp);
             CreateSegment(dstManager, entities[0],
-                new BeltSegment(new int2(3, 5), new int2(12, 5), entities[1]),(EntityType.A, 1), (EntityType.A, 4));
+                new BeltSegment(new int2(3, 5), new int2(12, 5), entities[1]),(ItemType.PaintBucket, 1), (ItemType.PaintBucket, 4));
             CreateSegment(dstManager, entities[1],
-                new BeltSegment(new int2(13, 2), new int2(13, 10)), (EntityType.B, 8));
+                new BeltSegment(new int2(13, 2), new int2(13, 10)), (ItemType.HardHat, 8));
             return entities;
         }
 
@@ -114,7 +114,7 @@ namespace Automation
                 new BeltSegment(new int2(3, 5), new int2(12, 5), entities[1])
                 //,(EntityType.A, 1)
                 //, (EntityType.A, 4)
-                , (EntityType.B, 3),(EntityType.B, 1),(EntityType.B, 1),(EntityType.B, 1),(EntityType.B, 1)
+                , (ItemType.HardHat, 3),(ItemType.HardHat, 1),(ItemType.HardHat, 1),(ItemType.HardHat, 1),(ItemType.HardHat, 1)
                 );
             CreateSegment(dstManager, entities[1],
                 new BeltSegment(new int2(13, 5), new int2(13, 7))//,(EntityType.B, 1)
@@ -133,7 +133,7 @@ namespace Automation
                     new BeltSegment(new int2(-100*(beltCount-i)-1, 5),
                         new int2(-100*(beltCount-i-1), 5),
                         i < beltCount - 1 ? entities[2+i+1] : first)
-                    , /*i != 0 ? null :*/ Enumerable.Range(0, itemCount).Select(x => (x % 2 == 0 ? EntityType.A : EntityType.B, (ushort) 2)).ToArray()
+                    , /*i != 0 ? null :*/ Enumerable.Range(0, itemCount).Select(x => (x % 2 == 0 ? ItemType.PaintBucket : ItemType.HardHat, (ushort) 2)).ToArray()
                 );
             }
             CreateSegment(dstManager, entities[0], new BeltSegment(new int2(1, 5),
@@ -173,7 +173,7 @@ namespace Automation
         }
 
         private void CreateSegment(EntityManager dstManager, Entity beltSegmentEntity, BeltSegment segment,
-            params (EntityType, ushort)[] beltItems)
+            params (ItemType, ushort)[] beltItems)
         {
             dstManager.AddComponentData(beltSegmentEntity, segment);
             // dstManager.AddComponent<DisableRendering>(beltSegmentEntity);

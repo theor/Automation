@@ -64,7 +64,7 @@ namespace Automation
                         UnsafeUtility.MemClear(counts, UnsafeUtility.SizeOf<int>() * 2);
                         
                         for (int i = 0; i < items.Length; i++)
-                            counts[items[i].Type - EntityType.A]++;
+                            counts[items[i].Type - ItemType.PaintBucket]++;
 
                         for (int i = 0; i < 2; i++)
                             Interlocked.Add(ref UnsafeUtility.ArrayElementAsRef<int>(countPtr, i), counts[i]);
@@ -83,12 +83,12 @@ namespace Automation
                     int* counts = stackalloc int[2];
                     UnsafeUtility.MemClear(counts, UnsafeUtility.SizeOf<int>() * 2);
 
-                    if (s.Input.Type != EntityType.None)
-                        counts[s.Input.Type - EntityType.A]++;
-                    if (s.Output1.Type != EntityType.None)
-                        counts[s.Output1.Type - EntityType.A]++;
-                    if (s.Output2.Type != EntityType.None)
-                        counts[s.Output2.Type - EntityType.A]++;
+                    if (s.Input.Type != ItemType.None)
+                        counts[s.Input.Type - ItemType.PaintBucket]++;
+                    if (s.Output1.Type != ItemType.None)
+                        counts[s.Output1.Type - ItemType.PaintBucket]++;
+                    if (s.Output2.Type != ItemType.None)
+                        counts[s.Output2.Type - ItemType.PaintBucket]++;
                     for (int i = 0; i < 2; i++)
                         Interlocked.Add(ref UnsafeUtility.ArrayElementAsRef<int>(countPtr2, i), counts[i]);
                 }

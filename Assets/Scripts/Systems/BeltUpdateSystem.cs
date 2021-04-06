@@ -34,7 +34,7 @@ namespace Automation
                 int iter = 0;
                 do
                 {
-                    if(iter++ >= 100000)
+                    if(iter++ >= 1000000)
                         throw new NotImplementedException();
                     var segment = Segments[e];
                     var items = Items[e];
@@ -66,7 +66,7 @@ namespace Automation
                             {
                                 var splitter = Splitters[segment.Next];
                                 // no room in input
-                                if (splitter.Input.Type != EntityType.None)
+                                if (splitter.Input.Type != ItemType.None)
                                     continue;
 
                                 if (item.Distance > 0) // still inserting
