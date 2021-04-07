@@ -7,21 +7,56 @@ using UnityEngine;
 
 namespace Automation
 {
+    struct BeltMerger : IComponentData
+    {
+
+    }
+    struct BeltSplitter : IComponentData
+    {
+        public readonly int2 Start;
+        public readonly int2 End;
+        public readonly Entity Next1;
+        public readonly Entity Next2;
+        public BeltItem Input;
+        public BeltItem Output1;
+        public BeltItem Output2;
+        public bool UseOutput2;
+        public bool Rendered;
+        [JsonIgnore] public readonly int2 RevDir => PointExt.Dir(End, Start);
+        public AABB AABB => new AABB {Center = BeltSegment.FromI2(Start), Extents = 3};
+
+        public BeltSplitter(int2 start, int2 end, Entity next1, Entity next2) : this()
+        {
+            Start = start;
+            End = end;
+            Next1 = next1;
+            Next2 = next2;
+        }
+    }
     struct BeltSegment : IComponentData
     {
+        public static float3 FromI2(int2 i2) => new float3(i2.x, 0, i2.y);
+
         public int2 Start;
         public int2 End;
         public Entity Next;
+        public Entity Prev;
         public bool Rendered;
+        public ushort DistanceToInsertAtStart;
+
+        public BeltSegment(int2 start, int2 end, Entity next = default) : this()
+        {
+            Start = start;
+            End = end;
+            Next = next;
+        }
+
         [JsonIgnore] public readonly int2 Dir => PointExt.Dir(Start, End);
         [JsonIgnore] public readonly int2 RevDir => PointExt.Dir(End, Start);
 
         [JsonIgnore] public readonly int2 DropPoint => End + Dir;
-        
-        private static float3 FromI2(int2 i2)
-        {
-            return new float3(i2.x, 0, i2.y);
-        }
+
+
         public readonly AABB AABB =>
             new AABB
             {
@@ -29,58 +64,16 @@ namespace Automation
                 Extents = 0.5f * (FromI2(math.abs(End - Start))) + 1,
             };
 
-        public override string ToString() => $"Segment {Start} -> {End}";
+        public void ComputeInsertionPoint(ref DynamicBuffer<BeltItem> items, ushort subdivCount)
+        {
+            var acc = 0;
+            for (int i = 0; i < items.Length; i++)
+                acc += items[i].Distance;
 
-        public void InsertItem(in World.Settings settings, ref DynamicBuffer<BeltItem> items, BeltItem segmentItem,
-            int2 dropPoint)
-        {
-            segmentItem.Distance = 0;
-            var targetDist = math.abs(dropPoint.x - DropPoint.x + dropPoint.y - DropPoint.y) * settings.BeltDistanceSubDiv;
-            int itemIdx = 0;
-            int iter = items.Length + 2;
-            var dist = 0;
-            // Debug.Log($"Insert start in {Start} -> {End} target {dropPoint} dir {Dir} revdir {RevDir} targetDist {targetDist}");
-            while (dist != targetDist)
-            {
-                if(iter-- <= 0)
-                    throw new NotImplementedException();
-                var delta = (ushort) (targetDist - dist);
-                if (itemIdx < items.Length)
-                {
-                    ref var item = ref items.ElementAt(itemIdx);
-                    if (item.Distance + dist < targetDist)
-                    {
-                        dist += item.Distance;
-                        itemIdx++;
-                    }
-                    else
-                    {
-                        segmentItem.Distance = delta;
-                        item.Distance -= segmentItem.Distance;
-                        break;
-                    }
-                }
-                else
-                {
-                    segmentItem.Distance = delta;
-                    break;
-                }
-            }
-        
-            // if (itemWillBeTickedAgain)
-            //     segmentItem.Distance++;
-            // if not last item, patch next one
-            // if (itemIdx < Items.Count)
-            // {
-            //     var i = Items[itemIdx];
-            //     i.Distance = (byte) (i.Distance - segmentItem.Distance - 1);
-            //     Items[itemIdx] = i;
-            // }
-            items.Insert(itemIdx, segmentItem);
+            var length = math.abs(DropPoint-Start) * subdivCount;
+            DistanceToInsertAtStart = (ushort) (length.x + length.y - acc);
         }
-        public readonly float3 ComputePosition(float dist)
-        {
-            return new float3(DropPoint.x + (dist) * RevDir.x, 0, DropPoint.y + (dist) * RevDir.y);
-        }
+
+        public override string ToString() => $"Segment {Start} -> {End}";
     }
 }

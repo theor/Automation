@@ -5,6 +5,8 @@ Shader "Custom/ItemURPShader"
     // because the output color is predefined in the fragment shader code.
     Properties
     {
+        
+        _TranslationOffset("Translation offset", vector) = (0,0,0,1)
         // Specular vs Metallic workflow
         [HideInInspector] _WorkflowMode("WorkflowMode", Float) = 1.0
 
@@ -174,6 +176,8 @@ struct Varyings
                 float4 positionCS               : SV_POSITION;
             };
 
+            float4 _TranslationOffset;
+
             CBUFFER_START(UnityPerMaterial)
             StructuredBuffer<float3> _AllInstancesTransformBuffer;
             CBUFFER_END
@@ -191,7 +195,7 @@ struct Varyings
                     1,0,0,0,
                     0,1,0,0,
                     0,0,1,0,
-                    pos.x,pos.y,pos.z,1,
+                    pos.x+_TranslationOffset.x,pos.y+_TranslationOffset.y,pos.z+_TranslationOffset.z,1,
                 };
                 float scale = 3;
                 float4x4 scaleMat= {
@@ -200,9 +204,7 @@ struct Varyings
                     0,0,scale,0,
                     0,0,0,1,
                 };
-                output.positionCS = mul(
-                    GetWorldToHClipMatrix(),
-                    mul(
+                float4 worldPos = mul(
                         mul(
                             mul(
                                 GetObjectToWorldMatrix(),
@@ -211,26 +213,29 @@ struct Varyings
                             float4(
                                 input.positionOS.xyz, 1.0)
                         ),
-                     tr)
+                     tr);
+                output.positionCS = mul(
+                    GetWorldToHClipMatrix(),
+                    worldPos
                 );
 
                 // VertexPositionInputs contains position in multiple spaces (world, view, homogeneous clip space)
                 // Our compiler will strip all unused references (say you don't use view space).
                 // Therefore there is more flexibility at no additional cost with this struct.
-                VertexPositionInputs vertexInput = GetVertexPositionInputs(input.positionOS.xyz);
+                // VertexPositionInputs vertexInput = GetVertexPositionInputs(input.positionOS.xyz);
 
                 // Similar to VertexPositionInputs, VertexNormalInputs will contain normal, tangent and bitangent
                 // in world space. If not used it will be stripped.
                 VertexNormalInputs vertexNormalInput = GetVertexNormalInputs(input.normalOS, input.tangentOS);
 
                 // Computes fog factor per-vertex.
-                float fogFactor = ComputeFogFactor(vertexInput.positionCS.z);
+                float fogFactor = ComputeFogFactor(output.positionCS.z);
 
                 // TRANSFORM_TEX is the same as the old shader library.
                 output.uv = TRANSFORM_TEX(input.uv, _BaseMap);
                 output.uvLM = input.uvLM.xy * unity_LightmapST.xy + unity_LightmapST.zw;
 
-                output.positionWSAndFogFactor = float4(vertexInput.positionWS, fogFactor);
+                output.positionWSAndFogFactor = float4(worldPos.xyz, fogFactor);
                 output.normalWS = vertexNormalInput.normalWS;
 
                 // Here comes the flexibility of the input structs.
@@ -249,7 +254,7 @@ struct Varyings
                 // and this coord will be the uv coord of the screen space shadow texture.
                 // Otherwise LWRP will resolve shadows in light space (no depth pre-pass and shadow collect pass)
                 // In this case shadowCoord will be the position in light space.
-                output.shadowCoord = GetShadowCoord(vertexInput);
+                output.shadowCoord = TransformWorldToShadowCoord(worldPos); 
 #endif
                 // We just use the homogeneous clip position from the vertex input
                 // output.positionCS = vertexInput.positionCS;
@@ -359,5 +364,5 @@ struct Varyings
         // Used for Baking GI. This pass is stripped from build.
         UsePass "Universal Render Pipeline/Lit/Meta"
     }
-    CustomEditor "UnityEditor.Rendering.Universal.ShaderGUI.LitShader"
+//    CustomEditor "UnityEditor.Rendering.Universal.ShaderGUI.LitShader"
 }
