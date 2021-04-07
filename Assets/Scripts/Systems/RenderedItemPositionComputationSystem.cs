@@ -66,17 +66,11 @@ namespace Automation
                 {
                     if (RenderedItemPositions[index].IsCreated)
                         RenderedItemPositions[index].Dispose();
-                    // Debug.Log($"Allocate {(EntityType.A + (byte)index)} {_cullingSystem.RenderedItemCount[index]}");
                     RenderedItemPositions[index] = new NativeArray<float3>(_cullingSystem.RenderedItemCount[index], Allocator.Persistent);
                 }
+                _renderedItemPositionsPointer[index] = (float3*) RenderedItemPositions[index].GetUnsafePtr();
+                _itemPositionArrayIndex[index] = -1;
             }
-
-            {
-               _renderedItemPositionsPointer[0] = (float3*) RenderedItemPositions[0].GetUnsafePtr();
-               _renderedItemPositionsPointer[1] = (float3*) RenderedItemPositions[1].GetUnsafePtr();
-            };
-            _itemPositionArrayIndex[0] = -1;
-            _itemPositionArrayIndex[1] = -1;
 
             World.Settings settings = GetSingleton<World.Settings>();
             Dependency = new ComputePositionsJob
@@ -159,18 +153,14 @@ namespace Automation
 
             public unsafe void Execute(ArchetypeChunk chunk, int chunkIndex, int firstEntityIndex)
             {
-                var segments = chunk.GetNativeArray(BeltSegmentsHandle);
-                var allItems = chunk.GetBufferAccessor(BeltItemsHandle);
+                NativeArray<BeltSegment> segments = chunk.GetNativeArray(BeltSegmentsHandle);
+                BufferAccessor<BeltItem> allItems = chunk.GetBufferAccessor(BeltItemsHandle);
                 for (int chunkIdx = 0; chunkIdx != chunk.Count; chunkIdx++)
                 {
-                    var segment = segments[chunkIdx];
+                    BeltSegment segment = segments[chunkIdx];
                     if (!segment.Rendered)
-                    {
-                        // Debug.Log(String.Format("  SKIP {0}", entities[chunkIdx]));
                         continue;
-                    }
-                    var items = allItems[chunkIdx];
-                    // Debug.Log(String.Format("  Process {0} {1} items", entities[chunkIdx], items.Length));
+                    DynamicBuffer<BeltItem> items = allItems[chunkIdx];
                     float dist = 0;
                     int2 dropPoint = segment.DropPoint;
                     int2 revDir = segment.RevDir;
@@ -180,10 +170,9 @@ namespace Automation
                         dist += item.Distance / (float) Settings.BeltDistanceSubDiv;
                         float3 computePosition =
                             new float3(dropPoint.x + dist * revDir.x, 0, dropPoint.y + dist * revDir.y);
-                        var itemTypeIndex = item.Type - ItemType.PaintBucket;
+                        byte itemTypeIndex = (byte) (item.Type - 1);
                         ref int instanceIndexRef = ref itemPositionArrayIndexPointer.ElementAt(itemTypeIndex);
                         int index = Interlocked.Increment(ref instanceIndexRef);
-                        // Debug.Log(String.Format("Inc {0} to {1}", item.Type - EntityType.A, index));
                         _renderedItemPositionsPointer[itemTypeIndex][index] = computePosition;
                     }
                 }

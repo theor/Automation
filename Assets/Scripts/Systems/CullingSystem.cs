@@ -32,12 +32,13 @@ namespace Automation
                 RenderedItemCount.Dispose();
         }
 
+        const int ItemTypes = 2;
 
         protected override unsafe void OnUpdate()
         {
             _renderedItemPositionComputationSystem.SetupDependency.Complete();
             if(!RenderedItemCount.IsCreated)
-                RenderedItemCount = new NativeArray<int>(2, Allocator.Persistent);
+                RenderedItemCount = new NativeArray<int>(ItemTypes, Allocator.Persistent);
             else
                 for (var index = 0; index < RenderedItemCount.Length; index++)
                     RenderedItemCount[index] = 0;
@@ -61,12 +62,12 @@ namespace Automation
                     if (s.Rendered)
                     {
                         int* counts = stackalloc int[2];
-                        UnsafeUtility.MemClear(counts, UnsafeUtility.SizeOf<int>() * 2);
+                        UnsafeUtility.MemClear(counts, UnsafeUtility.SizeOf<int>() * ItemTypes);
                         
                         for (int i = 0; i < items.Length; i++)
                             counts[items[i].Type - ItemType.PaintBucket]++;
 
-                        for (int i = 0; i < 2; i++)
+                        for (int i = 0; i < ItemTypes; i++)
                             Interlocked.Add(ref UnsafeUtility.ArrayElementAsRef<int>(countPtr, i), counts[i]);
                     }
                 })

@@ -1,5 +1,7 @@
 using System;
+using Unity.Collections;
 using Unity.Entities;
+using Unity.Mathematics;
 using UnityEngine;
 
 namespace Automation
@@ -8,50 +10,46 @@ namespace Automation
     class ItemRenderingSystem : SystemBase
     {
         private RenderedItemPositionComputationSystem _renderedItemPositionComputationSystem;
-        private GraphicsBuffer[] _bufferWithArgs;
+        private GraphicsBuffer[] _graphicsBuffers;
 
         protected override void OnCreate()
         {
             base.OnCreate();
             _renderedItemPositionComputationSystem = World.GetExistingSystem<RenderedItemPositionComputationSystem>();
-            _bufferWithArgs = new GraphicsBuffer[2];
+            _graphicsBuffers = new GraphicsBuffer[2];
         }
 
         protected override void OnDestroy()
         {
-            for (int i = 0; i < _bufferWithArgs.Length; i++)
-                _bufferWithArgs[i]?.Dispose();
+            for (int i = 0; i < _graphicsBuffers.Length; i++)
+                _graphicsBuffers[i]?.Dispose();
         }
 
         protected override void OnUpdate()
         {
             _renderedItemPositionComputationSystem.SetupDependency.Complete();
-            var renderedItemCount = _renderedItemPositionComputationSystem.RenderedItemPositions;
+            var renderedItemPositions = _renderedItemPositionComputationSystem.RenderedItemPositions;
 
             var prefabs = GetSingleton<World.Prefabs>();
             
-            for (var index = 0; index < renderedItemCount.Length; index++)
+            for (var index = 0; index < renderedItemPositions.Length; index++)
             {
-                var nativeArray = renderedItemCount[index];
-                if (nativeArray.Length == 0)
-                {
-                    // Debug.Log("Skip " + (EntityType.A + (byte) index));
+                NativeArray<float3> itemPositions = renderedItemPositions[index];
+                if (itemPositions.Length == 0)
                     continue;
-                }
-                // Debug.Log($"Draw {nativeArray.Length} {(EntityType.A + (byte) index)} {nativeArray[0]}");
-                if (_bufferWithArgs[index] == null || _bufferWithArgs[index].count != nativeArray.Length)
+                if (_graphicsBuffers[index] == null || _graphicsBuffers[index].count != itemPositions.Length)
                 {
-                    _bufferWithArgs[index]?.Dispose();
-                    _bufferWithArgs[index] = new GraphicsBuffer( GraphicsBuffer.Target.Structured, nativeArray.Length, 12);
+                    _graphicsBuffers[index]?.Dispose();
+                    _graphicsBuffers[index] = new GraphicsBuffer( GraphicsBuffer.Target.Structured, itemPositions.Length, 12);
                 }
-                _bufferWithArgs[index].SetData(nativeArray);
+                _graphicsBuffers[index].SetData(itemPositions);
                 var materialPropertyBlock = new MaterialPropertyBlock();
-                materialPropertyBlock.SetBuffer("_AllInstancesTransformBuffer", _bufferWithArgs[index]);
+                materialPropertyBlock.SetBuffer("_AllInstancesTransformBuffer", _graphicsBuffers[index]);
 
                 var m = EntityManager.GetSharedComponentData<Unity.Rendering.RenderMesh>(
                     index == 0 ? prefabs.ItemPrefab : prefabs.Item2Prefab); 
 
-                Graphics.DrawMeshInstancedProcedural(m.mesh, 0, m.material, new Bounds(Vector3.zero, Vector3.one*10000),nativeArray.Length, materialPropertyBlock);
+                Graphics.DrawMeshInstancedProcedural(m.mesh, 0, m.material, new Bounds(Vector3.zero, Vector3.one*10000),itemPositions.Length, materialPropertyBlock);
             }
            
         }

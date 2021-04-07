@@ -11,9 +11,11 @@ namespace Automation
     [UpdateInGroup(typeof(FixedStepSimulationSystemGroup))]
     class BeltUpdateSystem : SystemBase
     {
-        private NativeArray<Entity> _simulationChunksFirstSegment;
         private EntityQueryMask _hasBeltSegmentMask, _hasBeltSplitterMask;
+        private EntityQuery _lastBeltSegmentQuery;
 
+        struct LastBeltSegment: IComponentData{}
+        
         [BurstCompile]
         struct BeltUpdateJob : IJobFor
         {
@@ -27,7 +29,7 @@ namespace Automation
             public ComponentDataFromEntity<BeltSplitter> Splitters;
             [NativeDisableContainerSafetyRestriction]
             public BufferFromEntity<BeltItem> Items;
-            public World.Settings settings;
+            public World.Settings Settings;
             public void Execute(int index)
             {
                 Entity e = SimulationChunksFirstSegment[index];
@@ -45,7 +47,7 @@ namespace Automation
                         ref BeltItem item = ref items.ElementAt(i);
 
                         // simple case, too far from belt end to care about a next segment
-                        if (item.Distance > settings.BeltDistanceSubDiv)
+                        if (item.Distance > Settings.BeltDistanceSubDiv)
                         {
                             item.Distance--;
                             segment.DistanceToInsertAtStart++;
@@ -78,7 +80,7 @@ namespace Automation
                                 }
 
                                 // will be update this frame
-                                item.Distance = (ushort) (settings.BeltDistanceSubDiv);
+                                item.Distance = (ushort) (Settings.BeltDistanceSubDiv);
                                 splitter.Input = item;
                                 Splitters[segment.Next] = splitter;
                                 items.RemoveAt(i);
@@ -113,17 +115,22 @@ namespace Automation
             }
         }
 
+        protected override void OnCreate()
+        {
+            _lastBeltSegmentQuery = GetEntityQuery(ComponentType.ReadOnly<LastBeltSegment>());
+        }
+
         protected override void OnDestroy()
         {
-            _simulationChunksFirstSegment.Dispose();
         }
 
         protected override void OnUpdate()
         {
             World.Settings settings = GetSingleton<World.Settings>();
-            if (!_simulationChunksFirstSegment.IsCreated)
+            if(_lastBeltSegmentQuery.IsEmpty)
             {
-                var mask = _hasBeltSegmentMask = GetEntityQuery(ComponentType.ReadOnly<BeltSegment>()).GetEntityQueryMask();
+                _hasBeltSplitterMask = GetEntityQuery(ComponentType.ReadOnly<BeltSplitter>()).GetEntityQueryMask();
+                var beltSegmentMask = _hasBeltSegmentMask = GetEntityQuery(ComponentType.ReadOnly<BeltSegment>()).GetEntityQueryMask();
                 var segments = GetComponentDataFromEntity<BeltSegment>();
                 Entities.ForEach((Entity e, DynamicBuffer<BeltItem> dynamicBuffer, ref BeltSegment segment) =>
                 {
@@ -132,7 +139,7 @@ namespace Automation
                     var next = segment.Next;
                     if (next != Entity.Null)
                     {
-                        if (mask.Matches(next))
+                        if (beltSegmentMask.Matches(next))
                         {
                             var nextBeltSegment = segments[next];
                             nextBeltSegment.Prev = e;
@@ -140,34 +147,35 @@ namespace Automation
                         }
                     }
                 }).Run();
-                var ns = new NativeList<Entity>(Allocator.Persistent);
-                _hasBeltSplitterMask = GetEntityQuery(ComponentType.ReadOnly<BeltSplitter>()).GetEntityQueryMask();
+                var lastSegments = new NativeList<Entity>(Allocator.TempJob);
                 Entities.ForEach((Entity e, int nativeThreadIndex, in BeltSegment s) =>
                 {
-                    if (s.Next == Entity.Null || !mask.Matches(s.Next))
-                    {
-                        ns.Add(e);
-                    }
-                }).Schedule(Dependency).Complete();
-                _simulationChunksFirstSegment = ns;
+                    if (s.Next == Entity.Null || !beltSegmentMask.Matches(s.Next))
+                        lastSegments.Add(e);
+                })
+                    .Schedule(Dependency)
+                    .Complete();
+                EntityManager.AddComponent<LastBeltSegment>(lastSegments);
+                lastSegments.Dispose();
             }
 
             // Debug.Log(String.Join(", ", _simulationChunksFirstSegment.ToArray()));
 
+            var simulationChunksFirstSegment = _lastBeltSegmentQuery.ToEntityArrayAsync(Allocator.TempJob, out var entitiesReady);
             Dependency =
                 new BeltUpdateJob
             {
-                settings = settings,
+                Settings = settings,
                 HasBeltSegmentMask = _hasBeltSegmentMask,
                 HasBeltSplitterMask = _hasBeltSplitterMask,
                 Items = GetBufferFromEntity<BeltItem>(),
                 Segments = GetComponentDataFromEntity<BeltSegment>(),
                 Splitters = GetComponentDataFromEntity<BeltSplitter>(),
-                SimulationChunksFirstSegment = _simulationChunksFirstSegment,
+                SimulationChunksFirstSegment = simulationChunksFirstSegment,
             }
                     // .Run(_simulationChunksFirstSegment.Length);
-                .ScheduleParallel(_simulationChunksFirstSegment.Length, 1, Dependency);
-
+                .ScheduleParallel(_lastBeltSegmentQuery.CalculateEntityCount(), 1, JobHandle.CombineDependencies( entitiesReady, Dependency));
+            Dependency = simulationChunksFirstSegment.Dispose(Dependency);
 
             // Debug draw
             if(settings.DebugDraw)
